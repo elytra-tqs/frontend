@@ -20,7 +20,7 @@ export const StationsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const fetchStations = async () => {
         try {
-            const response = await axios.get('/stations');
+            const response = await axios.get('/api/v1/stations');
             setStations(response.data);
         } catch (error) {
             console.error('Failed to fetch stations', error);
@@ -29,7 +29,7 @@ export const StationsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const registerStation = async (station: Station) => {
         try {
-            const response = await axios.post('/stations', station);
+            const response = await axios.post('/api/v1/stations', station);
             setStations((prev) => [...prev, response.data]);
         } catch (error) {
             console.error('Failed to register station', error);
