@@ -1,12 +1,19 @@
-import { Button } from "@/components/ui/button"
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import StationsPage from './pages/manage_stations/StationsPage';
+import StationDetails from './pages/manage_stations/StationDetails';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-svh">
-      <Button>Click me</Button>
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/stations" element={<StationsPage />} />
+        <Route path="/stations/:stationId" element={<StationDetails />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
 
