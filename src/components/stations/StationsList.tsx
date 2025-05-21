@@ -60,8 +60,8 @@ const StationsList: FC<StationsListProps> = ({ stations, onAddStation }) => {
                   <span className="capitalize">{station.status}</span>
                   <Button
                     variant="ghost"
-                    onClick={() => {/* TODO: Implement station details view */}}
-                  >
+                    onClick={() => navigate(`/stations/${station.id}/chargers`)}
+                    >
                     View Details
                   </Button>
                 </div>
