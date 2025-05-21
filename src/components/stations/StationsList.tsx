@@ -2,6 +2,8 @@ import { Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { useState, type FC } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 interface Station {
   id: string;
   name: string;
@@ -17,6 +19,7 @@ interface StationsListProps {
 
 const StationsList: FC<StationsListProps> = ({ stations, onAddStation }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const getStatusIcon = (status: Station['status']) => {
     switch (status) {
@@ -60,7 +63,7 @@ const StationsList: FC<StationsListProps> = ({ stations, onAddStation }) => {
                   <span className="capitalize">{station.status}</span>
                   <Button
                     variant="ghost"
-                    onClick={() => navigate(`/stations/${station.id}/chargers`)}
+                    onClick={() => navigate(`/stations/${station.id}`)}
                     >
                     View Details
                   </Button>
