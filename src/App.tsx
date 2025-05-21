@@ -1,12 +1,12 @@
-import { Button } from "@/components/ui/button"
+import StationsPage from './pages/manage_stations/StationsPage';
 
 function App() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-svh">
-      <Button>Click me</Button>
+    <div className="min-h-screen bg-gray-100">
+      <StationsPage />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
 
