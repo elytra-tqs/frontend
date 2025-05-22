@@ -8,32 +8,35 @@ import {
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-
-export type ChargerStatus = 'available' | 'in-use' | 'maintenance' | 'out-of-service';
+import { ChargerStatus } from "@/contexts/ChargersContext";
 
 export interface Charger {
-  id: string;
+  id: number;
   name: string;
   type: string;
   power: number;
-  status: ChargerStatus;
+  status: string;
 }
 
 interface ChargersListProps {
-  stationId: string;
+  stationId: number;
   chargers: Charger[];
-  onUpdateChargerStatus: (chargerId: string, newStatus: ChargerStatus) => void;
+  onUpdateChargerStatus: (chargerId: number, newStatus: ChargerStatus) => void;
 }
 
-const getStatusColor = (status: ChargerStatus): string => {
+const getStatusColor = (status: string): string => {
   switch (status) {
     case 'available':
+    case 'AVAILABLE':
       return 'text-green-500';
     case 'in-use':
+    case 'BEING_USED':
       return 'text-blue-500';
     case 'maintenance':
+    case 'UNDER_MAINTENANCE':
       return 'text-yellow-500';
     case 'out-of-service':
+    case 'OUT_OF_SERVICE':
       return 'text-red-500';
     default:
       return '';
@@ -41,16 +44,54 @@ const getStatusColor = (status: ChargerStatus): string => {
 };
 
 const ChargersList: FC<ChargersListProps> = ({ stationId, chargers, onUpdateChargerStatus }) => {
-  const [selectedStatuses, setSelectedStatuses] = useState<Record<string, ChargerStatus>>({});
+  const [selectedStatuses, setSelectedStatuses] = useState<Record<number, ChargerStatus>>({});
 
-  const handleStatusChange = (chargerId: string, newStatus: ChargerStatus) => {
+  // Helper function to convert between UI status string and backend ChargerStatus enum
+  const getStatusValue = (status: string): string => {
+    // If it's already a proper enum value, return it
+    if (Object.values(ChargerStatus).includes(status as ChargerStatus)) {
+      return status;
+    }
+    
+    // Otherwise, convert from UI string to enum
+    switch (status.toLowerCase()) {
+      case 'available':
+        return ChargerStatus.AVAILABLE;
+      case 'in-use':
+        return ChargerStatus.BEING_USED;
+      case 'maintenance':
+        return ChargerStatus.UNDER_MAINTENANCE;
+      case 'out-of-service':
+        return ChargerStatus.OUT_OF_SERVICE;
+      default:
+        return ChargerStatus.AVAILABLE;
+    }
+  };
+
+  // Get display name for status value
+  const getStatusDisplayName = (status: string): string => {
+    switch(status) {
+      case ChargerStatus.AVAILABLE:
+        return 'Available';
+      case ChargerStatus.BEING_USED:
+        return 'In Use';
+      case ChargerStatus.UNDER_MAINTENANCE:
+        return 'Under Maintenance';
+      case ChargerStatus.OUT_OF_SERVICE:
+        return 'Out of Service';
+      default:
+        return status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+  };
+
+  const handleStatusChange = (chargerId: number, newStatus: string) => {
     setSelectedStatuses(prev => ({
       ...prev,
-      [chargerId]: newStatus
+      [chargerId]: getStatusValue(newStatus) as ChargerStatus
     }));
   };
 
-  const handleUpdateStatus = (chargerId: string) => {
+  const handleUpdateStatus = (chargerId: number) => {
     const newStatus = selectedStatuses[chargerId];
     if (newStatus) {
       onUpdateChargerStatus(chargerId, newStatus);
@@ -60,12 +101,12 @@ const ChargersList: FC<ChargersListProps> = ({ stationId, chargers, onUpdateChar
   return (
     <Accordion type="single" collapsible className="w-full">
       {chargers.map((charger) => (
-        <AccordionItem key={charger.id} value={charger.id}>
+        <AccordionItem key={charger.id} value={charger.id.toString()}>
           <AccordionTrigger className="px-4">
             <div className="flex justify-between w-full pr-4">
               <span>{charger.name}</span>
               <span className={`font-semibold ${getStatusColor(charger.status)}`}>
-                {charger.status.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                {getStatusDisplayName(charger.status)}
               </span>
             </div>
           </AccordionTrigger>
@@ -83,19 +124,23 @@ const ChargersList: FC<ChargersListProps> = ({ stationId, chargers, onUpdateChar
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-2 items-end">
+                <div className="grid grid-cols-2 gap-2">
                   <Select
                     value={selectedStatuses[charger.id] || charger.status}
-                    onValueChange={(value) => handleStatusChange(charger.id, value as ChargerStatus)}
+                    onValueChange={(value) => handleStatusChange(charger.id, value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue>
+                        {selectedStatuses[charger.id] 
+                          ? getStatusDisplayName(selectedStatuses[charger.id]) 
+                          : getStatusDisplayName(charger.status)}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="available">Available</SelectItem>
-                      <SelectItem value="in-use">In Use</SelectItem>
-                      <SelectItem value="maintenance">Under Maintenance</SelectItem>
-                      <SelectItem value="out-of-service">Out of Service</SelectItem>
+                      <SelectItem value={ChargerStatus.AVAILABLE}>Available</SelectItem>
+                      <SelectItem value={ChargerStatus.BEING_USED}>In Use</SelectItem>
+                      <SelectItem value={ChargerStatus.UNDER_MAINTENANCE}>Under Maintenance</SelectItem>
+                      <SelectItem value={ChargerStatus.OUT_OF_SERVICE}>Out of Service</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button onClick={() => handleUpdateStatus(charger.id)}>

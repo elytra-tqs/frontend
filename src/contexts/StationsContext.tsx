@@ -15,7 +15,6 @@ export interface Station {
     address: string; 
     latitude?: number; 
     longitude?: number;
-    numberOfChargers?: number; 
     chargerTypes?: string[]; 
     status?: 'available' | 'maintenance' | 'offline'; 
     lastMaintenance?: string;
@@ -28,7 +27,6 @@ export interface StationFormData {
         latitude: number;
         longitude: number;
     };
-    numberOfChargers: number;
     chargerTypes?: string[];
     status?: 'available' | 'maintenance' | 'offline';
     lastMaintenance?: string;
