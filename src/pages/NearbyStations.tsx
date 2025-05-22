@@ -2,6 +2,31 @@ import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 
+const MapLegend = () => (
+    <div
+      style={{
+        position: "absolute",
+        bottom: 20,
+        left: 20,
+        background: "white",
+        padding: "8px 16px",
+        borderRadius: "8px",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+        fontSize: "14px",
+        zIndex: 1000,
+      }}
+    >
+      <div className="flex items-center mb-1">
+        <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" alt="User" style={{ width: 20, marginRight: 8 }} />
+        <span>Your Location</span>
+      </div>
+      <div className="flex items-center">
+        <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" alt="Station" style={{ width: 20, marginRight: 8 }} />
+        <span>Charging Station</span>
+      </div>
+    </div>
+  ); 
+
 const userIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
   iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
@@ -35,10 +60,34 @@ const NearbyStationsPage = ({ stations }: { stations: Array<{
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
-      (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
-      (err) => alert("Location access denied.")
+      successCallback,
+      errorCallback
     );
   }, []);
+
+  function successCallback(position: GeolocationPosition) {
+    // Success
+    console.log(position);
+    setUserLocation([position.coords.latitude, position.coords.longitude]);
+  }
+
+  function errorCallback(error: GeolocationPositionError) {
+    switch(error.code) {
+      case error.PERMISSION_DENIED:
+        alert("User denied the request for Geolocation.");
+        break;
+      case error.POSITION_UNAVAILABLE:
+        alert("Location information is unavailable.");
+        break;
+      case error.TIMEOUT:
+        alert("The request to get user location timed out.");
+        break;
+      case error.UNKNOWN_ERROR:
+        alert("An unknown error occurred.");
+        break;
+    }
+  }
+
   // Calculate distance between two lat/lng points (Haversine formula)
   function getDistance([lat1, lon1]: [number, number], [lat2, lon2]: [number, number]) {
     const toRad = (v: number) => (v * Math.PI) / 180;
@@ -62,37 +111,16 @@ const NearbyStationsPage = ({ stations }: { stations: Array<{
       )
     : stations;
 
-    const MapLegend = () => (
-        <div
-          style={{
-            position: "absolute",
-            bottom: 20,
-            left: 20,
-            background: "white",
-            padding: "8px 16px",
-            borderRadius: "8px",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-            fontSize: "14px",
-            zIndex: 1000,
-          }}
-        >
-          <div className="flex items-center mb-1">
-            <img src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png" alt="User" style={{ width: 20, marginRight: 8 }} />
-            <span>Your Location</span>
-          </div>
-          <div className="flex items-center">
-            <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" alt="Station" style={{ width: 20, marginRight: 8 }} />
-            <span>Charging Station</span>
-          </div>
-        </div>
-      ); 
-
   return (
     <div className="flex flex-col items-center p-4">
       <h1 className=" flex justify-center text-2xl font-bold mb-4">Nearby Charging Stations</h1>
       {userLocation && (
         <>
-          <MapContainer center={userLocation} zoom={13} style={{ height: "400px", width: "100%" }}>
+          <MapContainer 
+                center={userLocation} zoom={13} 
+                style={{ height: "400px", width: "100%" }} 
+                attributionControl={false}
+            >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
