@@ -2,6 +2,27 @@ import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 
+export const stations = [
+    {
+      id: '1',
+      name: 'Aveiro City Center Station',
+      location: 'Aveiro City Center, Portugal',
+      coordinates: { latitude: 40.6405, longitude: -8.6538 },
+    },
+    {
+      id: '2',
+      name: 'Universidade de Aveiro',
+      location: 'Universidade de Aveiro, Portugal',
+      coordinates: { latitude: 40.6302, longitude: -8.6576 },
+    },
+    {
+      id: '3',
+      name: 'Forum Aveiro Station',
+      location: 'Forum Aveiro, Portugal',
+      coordinates: { latitude: 40.6412, longitude: -8.6531 },
+    },
+  ];
+
 const MapLegend = () => (
     <div
       style={{
