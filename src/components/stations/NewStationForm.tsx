@@ -2,21 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, type ChangeEvent, type FC, type FormEvent } from 'react';
+import type { StationFormData } from '../../contexts/StationsContext';
 
 interface NewStationFormProps {
   onSubmit: (stationData: StationFormData) => void;
   onCancel: () => void;
-}
-
-interface StationFormData {
-  name: string;
-  location: string;
-  coordinates: {
-    latitude: number;
-    longitude: number;
-  };
-  numberOfChargers: number;
-  chargerTypes: string[];
 }
 
 const NewStationForm: FC<NewStationFormProps> = ({ onSubmit, onCancel }) => {
@@ -44,8 +34,13 @@ const NewStationForm: FC<NewStationFormProps> = ({ onSubmit, onCancel }) => {
         ...prev,
         [parent]: {
           ...(prev[parent as keyof StationFormData] as Record<string, any>),
-          [child]: value,
+          [child]: parent === 'coordinates' ? parseFloat(value) || 0 : value,
         },
+      }));
+    } else if (name === 'numberOfChargers') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: parseInt(value) || 1,
       }));
     } else {
       setFormData(prev => ({
