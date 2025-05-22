@@ -7,6 +7,14 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
+  check-build:
+    name: Check Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run npm build
+      - run: |
+          npm install
+          npm run build
   sonarqube:
     name: SonarQube
     runs-on: ubuntu-latest
