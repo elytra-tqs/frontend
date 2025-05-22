@@ -6,6 +6,8 @@ import { useState, type FC } from 'react';
 import { useStations } from '../../contexts/StationsContext';
 import type { Station, StationFormData } from '../../contexts/StationsContext';
 import { AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface StationListItem {
   id: string;
@@ -45,7 +47,7 @@ const StationsPage: FC = () => {
     },
     status: station.status,
     lastMaintenance: station.lastMaintenance,
-    numberOfChargers: station.numberOfChargers || 0
+    numberOfChargers: 0 // Default value since it's not in the Station type
   })) as StationListItem[];
 
   if (loading && stations.length === 0) {
@@ -62,6 +64,14 @@ const StationsPage: FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Link to="/operator">
+            <Button variant="outline" size="sm">
+              Back to Operator Dashboard
+            </Button>
+          </Link>
+        </div>
+        
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 flex items-center">
             <AlertCircle className="w-5 h-5 mr-2" />
