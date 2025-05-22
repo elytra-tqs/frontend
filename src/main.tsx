@@ -3,9 +3,12 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import 'leaflet/dist/leaflet.css';
+import { StationsProvider } from './contexts/StationsContext'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <StationsProvider>
+      <App />
+    </StationsProvider>
   </StrictMode>,
 )
