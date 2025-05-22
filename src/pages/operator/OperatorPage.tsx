@@ -1,15 +1,10 @@
+import React from 'react';
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 
 function OperatorPage() {
   return (
     <div className="container mx-auto p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Operator Dashboard</h1>
-        <Link to="/">
-          <Button variant="outline">Back to Main Menu</Button>
-        </Link>
-      </div>
+      <h1 className="text-2xl font-bold mb-8">Operator Dashboard</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Link to="/operator/stations" className="block">
