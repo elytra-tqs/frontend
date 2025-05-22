@@ -4,34 +4,32 @@ import StationDetails from './pages/manage_stations/StationDetails';
 import Dashboard from './pages/Dashboard';
 import NearbyStations, { stations } from './pages/NearbyStations';
 import EVDriverPage from './pages/evdriver/EVDriverPage';
-import OperatorPage from './pages/operator/OperatorPage';
+import AdminPage from './pages/admin/AdminPage';
+import AppLayout from './components/layout/AppLayout';
 import { StationsProvider } from "./contexts/StationsContext";
 import { ChargersProvider } from "./contexts/ChargersContext";
 
 function App() {
   return (
-  <StationsProvider>
-  <ChargersProvider>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        
-        {/* EV Driver Routes */}
-        <Route path="/evdriver" element={<EVDriverPage />} />
-        
-        {/* Operator Routes */}
-        <Route path="/operator" element={<OperatorPage />} />
-        <Route path="/operator/stations" element={<StationsPage />} />
-        <Route path="/operator/stations/:stationId" element={<StationDetails />} />
-        <Route path="/nearby" element={<NearbyStations stations={stations} />} />
+    <StationsProvider>
+      <ChargersProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route element={<AppLayout />}>
+              <Route path="/evdriver" element={<EVDriverPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin/stations" element={<StationsPage />} />
+              <Route path="/admin/stations/:stationId" element={<StationDetails />} />
+              <Route path="/stations" element={<StationsPage />} />
+              <Route path="/stations/:stationId" element={<StationDetails />} />
+              <Route path="/nearby" element={<NearbyStations stations={stations} />} />
 
-        {/* Redirect old routes for backward compatibility */}
-        <Route path="/stations" element={<StationsPage />} />
-        <Route path="/stations/:stationId" element={<StationDetails />} />
-      </Routes>
-    </BrowserRouter>
-  </ChargersProvider>
-  </StationsProvider>
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </ChargersProvider>
+    </StationsProvider>
   );
 }
 
