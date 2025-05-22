@@ -30,45 +30,7 @@ const StationDetails: FC<StationDetailsProps> = ({ stationId, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [newStatus, setNewStatus] = useState<StationDetails['status']>('available');
 
-  useEffect(() => {
-    const fetchStationDetails = async () => {
-      try {
-        // TODO: Replace with actual API call
-        const response = await fetch(`/api/stations/${stationId}`);
-        const data = await response.json();
-        setStation(data);
-        setNewStatus(data.status);
-      } catch (error) {
-        console.error('Error fetching station details:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    fetchStationDetails();
-  }, [stationId]);
-
-  const handleStatusUpdate = async () => {
-    try {
-      // TODO: Replace with actual API call
-      await fetch(`/api/stations/${stationId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      
-      if (station) {
-        setStation({
-          ...station,
-          status: newStatus,
-        });
-      }
-    } catch (error) {
-      console.error('Error updating station status:', error);
-    }
-  };
 
   if (isLoading || !station) {
     return <div className="flex justify-center items-center h-64">Loading station details...</div>;
@@ -120,7 +82,7 @@ const StationDetails: FC<StationDetailsProps> = ({ stationId, onClose }) => {
                 </SelectContent>
               </Select>
               <Button
-                onClick={handleStatusUpdate}
+            
                 className="w-full mt-2"
               >
                 Update Status

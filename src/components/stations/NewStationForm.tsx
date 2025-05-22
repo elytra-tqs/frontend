@@ -17,7 +17,6 @@ const NewStationForm: FC<NewStationFormProps> = ({ onSubmit, onCancel }) => {
       latitude: 0,
       longitude: 0,
     },
-    numberOfChargers: 1,
     chargerTypes: [],
   });
 
@@ -36,11 +35,6 @@ const NewStationForm: FC<NewStationFormProps> = ({ onSubmit, onCancel }) => {
           ...(prev[parent as keyof StationFormData] as Record<string, any>),
           [child]: parent === 'coordinates' ? parseFloat(value) || 0 : value,
         },
-      }));
-    } else if (name === 'numberOfChargers') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: parseInt(value) || 1,
       }));
     } else {
       setFormData(prev => ({
@@ -99,19 +93,6 @@ const NewStationForm: FC<NewStationFormProps> = ({ onSubmit, onCancel }) => {
             step="any"
           />
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="numberOfChargers">Number of Chargers</Label>
-        <Input
-          type="number"
-          id="numberOfChargers"
-          name="numberOfChargers"
-          value={formData.numberOfChargers}
-          onChange={handleInputChange}
-          required
-          min="1"
-        />
       </div>
 
       <div className="flex justify-end space-x-4">

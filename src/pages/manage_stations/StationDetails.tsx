@@ -1,79 +1,46 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { PlusIcon } from "lucide-react";
 import ChargersList from "../../components/stations/ChargersList";
-import type { Charger, ChargerStatus } from "../../components/stations/ChargersList";
-import { v4 as uuidv4 } from 'uuid';
+import NewChargerForm from "../../components/stations/NewChargerForm";
+import { useChargers, ChargerStatus, type ChargerFormData } from "../../contexts/ChargersContext";
+import { useStations } from "../../contexts/StationsContext";
 
 const StationDetails = () => {
   const { stationId } = useParams();
-  const [chargers, setChargers] = useState<Charger[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { stations } = useStations();
+  const { chargers, loading: chargersLoading, error: chargersError, fetchChargersByStation, addChargerToStation, updateChargerAvailability } = useChargers();
+  const [showNewChargerDialog, setShowNewChargerDialog] = useState(false);
+
+  const station = stations.find(s => s.id === Number(stationId));
 
   useEffect(() => {
-    // Mock fetching chargers data
-    const fetchChargers = () => {
-      setIsLoading(true);
-      
-      // Simulate API call delay
-      setTimeout(() => {
-        // Mock data
-        const mockChargers: Charger[] = [
-          {
-            id: uuidv4(),
-            name: "Charger A1",
-            type: "DC Fast Charging",
-            power: 150,
-            status: "available"
-          },
-          {
-            id: uuidv4(),
-            name: "Charger A2",
-            type: "DC Fast Charging",
-            power: 150,
-            status: "in-use"
-          },
-          {
-            id: uuidv4(),
-            name: "Charger B1",
-            type: "AC Level 2",
-            power: 22,
-            status: "maintenance"
-          },
-          {
-            id: uuidv4(),
-            name: "Charger B2",
-            type: "AC Level 2",
-            power: 22,
-            status: "out-of-service"
-          }
-        ];
-        
-        setChargers(mockChargers);
-        setIsLoading(false);
-      }, 1000);
-    };
-
     if (stationId) {
-      fetchChargers();
+      fetchChargersByStation(Number(stationId));
     }
   }, [stationId]);
 
-  const handleUpdateChargerStatus = (chargerId: string, newStatus: ChargerStatus) => {
-    // In a real app, you would call an API here
-    console.log(`Updating charger ${chargerId} status to ${newStatus}`);
-    
-    // Update local state
-    setChargers(prev => 
-      prev.map(charger => 
-        charger.id === chargerId 
-          ? { ...charger, status: newStatus } 
-          : charger
-      )
-    );
+  const handleUpdateChargerStatus = async (chargerId: number, newStatus: ChargerStatus) => {
+    try {
+      await updateChargerAvailability(chargerId, newStatus);
+    } catch (error) {
+      console.error(`Failed to update charger ${chargerId} status to ${newStatus}`, error);
+    }
   };
 
-  if (isLoading) {
+  const handleAddCharger = async (stationId: number, chargerData: ChargerFormData) => {
+    try {
+      await addChargerToStation(stationId, chargerData);
+      setShowNewChargerDialog(false);
+    } catch (error) {
+      console.error("Failed to add charger", error);
+    }
+  };
+
+  if (chargersLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-center items-center h-64">
@@ -83,11 +50,41 @@ const StationDetails = () => {
     );
   }
 
+  if (chargersError) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-center items-center h-64 text-red-500">
+          Error: {chargersError}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Chargers for Station {stationId}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-2xl">
+            {station ? station.name : `Station ${stationId}`}
+          </CardTitle>
+          <Dialog open={showNewChargerDialog} onOpenChange={setShowNewChargerDialog}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Add Charger
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Charger</DialogTitle>
+              </DialogHeader>
+              <NewChargerForm 
+                stationId={Number(stationId)} 
+                onSubmit={handleAddCharger}
+                onCancel={() => setShowNewChargerDialog(false)}
+              />
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -95,13 +92,30 @@ const StationDetails = () => {
               Click on a charger to view details and manage its status.
             </p>
             
-            <ChargersList 
-              stationId={stationId!} 
-              chargers={chargers}
-              onUpdateChargerStatus={handleUpdateChargerStatus}
-            />
+            {chargers.length > 0 ? (
+              <ChargersList 
+                stationId={Number(stationId)} 
+                chargers={chargers.map(c => ({
+                  id: c.id,
+                  name: `Charger ${c.id}`,
+                  type: c.type,
+                  power: c.power,
+                  status: c.status
+                }))}
+                onUpdateChargerStatus={handleUpdateChargerStatus}
+              />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No chargers available for this station.
+              </div>
+            )}
           </div>
         </CardContent>
+        <CardFooter>
+          <p className="text-sm text-muted-foreground">
+            {station?.address}
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );
