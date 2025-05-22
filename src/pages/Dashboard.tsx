@@ -15,9 +15,9 @@ function Dashboard() {
           </Button>
         </Link>
         
-        <Link to="/operator">
+        <Link to="/admin">
           <Button size="lg" variant="default" className="h-24 w-48 text-lg">
-            Operator
+            Admin
           </Button>
         </Link>
       </div>
