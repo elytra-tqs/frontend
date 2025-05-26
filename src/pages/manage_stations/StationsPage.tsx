@@ -47,7 +47,7 @@ const StationsPage: FC = () => {
     },
     status: station.status,
     lastMaintenance: station.lastMaintenance,
-    numberOfChargers: station.numberOfChargers || 0,
+    numberOfChargers: 0, // Default value since it's not in the Station type
   })) as StationListItem[];
 
   if (loading && stations.length === 0) {
