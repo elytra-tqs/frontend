@@ -6,7 +6,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  baseURL: "http://localhost:8080/api/v1",
+  baseURL: "/api/v1",
 });
 
 export interface Station {
