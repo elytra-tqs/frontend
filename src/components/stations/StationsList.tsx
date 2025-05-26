@@ -1,8 +1,8 @@
-import { Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { useState, type FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { type FC } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface Station {
   id: string;
@@ -22,12 +22,19 @@ interface StationsListProps {
   isLoading?: boolean;
 }
 
-const StationsList: FC<StationsListProps> = ({ stations, onAddStation, isLoading = false }) => {
+const StationsList: FC<StationsListProps> = ({
+  stations,
+  onAddStation,
+  isLoading = false,
+}) => {
   const navigate = useNavigate();
 
-
   if (isLoading && stations.length === 0) {
-    return <div className="flex justify-center items-center h-64">Loading stations...</div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        Loading stations...
+      </div>
+    );
   }
 
   return (
@@ -46,7 +53,9 @@ const StationsList: FC<StationsListProps> = ({ stations, onAddStation, isLoading
 
       {stations.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">No charging stations found</p>
+          <p className="text-muted-foreground mb-4">
+            No charging stations found
+          </p>
           <Button onClick={onAddStation}>Register Your First Station</Button>
         </div>
       ) : (
@@ -78,4 +87,4 @@ const StationsList: FC<StationsListProps> = ({ stations, onAddStation, isLoading
   );
 };
 
-export default StationsList; 
+export default StationsList;

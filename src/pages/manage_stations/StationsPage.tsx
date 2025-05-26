@@ -1,17 +1,17 @@
-import StationsList from '../../components/stations/StationsList';
-import NewStationForm from '../../components/stations/NewStationForm';
-import StationDetails from '../../components/stations/StationDetails';
+import StationsList from "../../components/stations/StationsList";
+import NewStationForm from "../../components/stations/NewStationForm";
+import StationDetails from "../../components/stations/StationDetails";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState, type FC } from 'react';
-import { useStations } from '../../contexts/StationsContext';
-import type { Station, StationFormData } from '../../contexts/StationsContext';
-import { AlertCircle } from 'lucide-react';
+import { useState, type FC } from "react";
+import { useStations } from "../../contexts/StationsContext";
+import type { StationFormData } from "../../contexts/StationsContext";
+import { AlertCircle } from "lucide-react";
 
 interface StationListItem {
   id: string;
   name: string;
   location: string;
-  status?: 'available' | 'maintenance' | 'offline';
+  status?: "available" | "maintenance" | "offline";
   lastMaintenance?: string;
   coordinates: {
     latitude: number;
@@ -22,7 +22,9 @@ interface StationListItem {
 
 const StationsPage: FC = () => {
   const [showNewStationForm, setShowNewStationForm] = useState(false);
-  const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
+  const [selectedStationId, setSelectedStationId] = useState<string | null>(
+    null
+  );
   const { stations, registerStation, loading, error } = useStations();
 
   const addStation = async (stationData: StationFormData) => {
@@ -31,21 +33,21 @@ const StationsPage: FC = () => {
       setShowNewStationForm(false);
     } catch (err) {
       // Error is already handled in the context
-      console.error('Error in component when adding station:', err);
+      console.error("Error in component when adding station:", err);
     }
   };
 
-  const stationsWithStringIds = stations.map(station => ({
-    id: station.id?.toString() || '',
+  const stationsWithStringIds = stations.map((station) => ({
+    id: station.id?.toString() || "",
     name: station.name,
-    location: station.address, 
+    location: station.address,
     coordinates: {
       latitude: station.latitude || 0,
-      longitude: station.longitude || 0
+      longitude: station.longitude || 0,
     },
     status: station.status,
     lastMaintenance: station.lastMaintenance,
-    numberOfChargers: station.numberOfChargers || 0
+    numberOfChargers: station.numberOfChargers || 0,
   })) as StationListItem[];
 
   if (loading && stations.length === 0) {
@@ -87,8 +89,8 @@ const StationsPage: FC = () => {
             onClose={() => setSelectedStationId(null)}
           />
         ) : (
-          <StationsList 
-            stations={stationsWithStringIds} 
+          <StationsList
+            stations={stationsWithStringIds}
             onAddStation={() => setShowNewStationForm(true)}
             isLoading={loading}
           />
@@ -98,4 +100,4 @@ const StationsPage: FC = () => {
   );
 };
 
-export default StationsPage; 
+export default StationsPage;
