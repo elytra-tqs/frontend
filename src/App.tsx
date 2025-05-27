@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import StationsPage from './pages/manage_stations/StationsPage';
 import StationDetails from './pages/manage_stations/StationDetails';
 import Dashboard from './pages/Dashboard';
+import NearbyStations, { stations } from './pages/NearbyStations';
 import EVDriverPage from './pages/evdriver/EVDriverPage';
 import AdminPage from './pages/admin/AdminPage';
 import AppLayout from './components/layout/AppLayout';
@@ -22,6 +23,8 @@ function App() {
               <Route path="/admin/stations/:stationId" element={<StationDetails />} />
               <Route path="/stations" element={<StationsPage />} />
               <Route path="/stations/:stationId" element={<StationDetails />} />
+              <Route path="/nearby" element={<NearbyStations stations={stations} />} />
+
             </Route>
           </Routes>
         </BrowserRouter>
