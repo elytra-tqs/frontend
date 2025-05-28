@@ -1,8 +1,23 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, type FC, useEffect } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState, type FC } from "react";
+
 interface StationDetailsProps {
   stationId: string;
   onClose: () => void;
@@ -18,22 +33,24 @@ interface StationDetails {
   id: string;
   name: string;
   location: string;
-  status: 'available' | 'maintenance' | 'offline';
+  status: "available" | "maintenance" | "offline";
   lastMaintenance: string;
   totalChargers: number;
   activeChargers: number;
   usageData: UsageData[];
 }
 
-const StationDetails: FC<StationDetailsProps> = ({ stationId, onClose }) => {
-  const [station, setStation] = useState<StationDetails | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [newStatus, setNewStatus] = useState<StationDetails['status']>('available');
+const StationDetails: FC<StationDetailsProps> = ({ onClose }) => {
+  const [station] = useState<StationDetails | null>(null);
+  const [newStatus, setNewStatus] =
+    useState<StationDetails["status"]>("available");
 
-
-
-  if (isLoading || !station) {
-    return <div className="flex justify-center items-center h-64">Loading station details...</div>;
+  if (!station) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        Loading station details...
+      </div>
+    );
   }
 
   return (
@@ -44,10 +61,7 @@ const StationDetails: FC<StationDetailsProps> = ({ stationId, onClose }) => {
             <CardTitle className="text-2xl">{station.name}</CardTitle>
             <p className="text-muted-foreground">{station.location}</p>
           </div>
-          <Button
-            variant="ghost"
-            onClick={onClose}
-          >
+          <Button variant="ghost" onClick={onClose}>
             Close
           </Button>
         </div>
@@ -57,7 +71,10 @@ const StationDetails: FC<StationDetailsProps> = ({ stationId, onClose }) => {
             <CardContent className="p-4">
               <CardTitle className="text-lg mb-2">Station Status</CardTitle>
               <div className="space-y-2">
-                <p>Current Status: <span className="capitalize">{station.status}</span></p>
+                <p>
+                  Current Status:{" "}
+                  <span className="capitalize">{station.status}</span>
+                </p>
                 <p>Last Maintenance: {station.lastMaintenance}</p>
                 <p>Total Chargers: {station.totalChargers}</p>
                 <p>Active Chargers: {station.activeChargers}</p>
@@ -70,7 +87,9 @@ const StationDetails: FC<StationDetailsProps> = ({ stationId, onClose }) => {
               <CardTitle className="text-lg mb-2">Update Status</CardTitle>
               <Select
                 value={newStatus}
-                onValueChange={(value) => setNewStatus(value as StationDetails['status'])}
+                onValueChange={(value) =>
+                  setNewStatus(value as StationDetails["status"])
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
@@ -81,12 +100,7 @@ const StationDetails: FC<StationDetailsProps> = ({ stationId, onClose }) => {
                   <SelectItem value="offline">Offline</SelectItem>
                 </SelectContent>
               </Select>
-              <Button
-            
-                className="w-full mt-2"
-              >
-                Update Status
-              </Button>
+              <Button className="w-full mt-2">Update Status</Button>
             </CardContent>
           </Card>
         </div>
@@ -102,8 +116,18 @@ const StationDetails: FC<StationDetailsProps> = ({ stationId, onClose }) => {
                   <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
                   <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
                   <Tooltip />
-                  <Bar yAxisId="left" dataKey="sessions" fill="#8884d8" name="Charging Sessions" />
-                  <Bar yAxisId="right" dataKey="totalEnergy" fill="#82ca9d" name="Total Energy (kWh)" />
+                  <Bar
+                    yAxisId="left"
+                    dataKey="sessions"
+                    fill="#8884d8"
+                    name="Charging Sessions"
+                  />
+                  <Bar
+                    yAxisId="right"
+                    dataKey="totalEnergy"
+                    fill="#82ca9d"
+                    name="Total Energy (kWh)"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -114,4 +138,4 @@ const StationDetails: FC<StationDetailsProps> = ({ stationId, onClose }) => {
   );
 };
 
-export default StationDetails; 
+export default StationDetails;

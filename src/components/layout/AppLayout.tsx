@@ -1,6 +1,5 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
-import AppBreadcrumb from '../navigation/AppBreadcrumb';
+import { Outlet } from "react-router-dom";
+import AppBreadcrumb from "../navigation/AppBreadcrumb";
 
 export function AppLayout() {
   return (
@@ -13,4 +12,4 @@ export function AppLayout() {
   );
 }
 
-export default AppLayout; 
+export default AppLayout;
