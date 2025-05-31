@@ -1,24 +1,52 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState, type ChangeEvent, type FC, type FormEvent } from 'react';
+import { useState, type ChangeEvent, type FC, type FormEvent, useEffect } from 'react';
 import type { StationFormData } from '../../contexts/StationsContext';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
 
 interface NewStationFormProps {
   onSubmit: (stationData: StationFormData) => void;
   onCancel: () => void;
 }
 
+// Fix for default marker icons in Leaflet with Next.js
+const icon = L.icon({
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+// Component to handle map clicks
+const MapClickHandler = ({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) => {
+  useMapEvents({
+    click: (e) => {
+      onMapClick(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+};
+
 const NewStationForm: FC<NewStationFormProps> = ({ onSubmit, onCancel }) => {
   const [formData, setFormData] = useState<StationFormData>({
     name: '',
     location: '',
     coordinates: {
-      latitude: 0,
-      longitude: 0,
+      latitude: 40.6405, // Default to Aveiro coordinates
+      longitude: -8.6538,
     },
     chargerTypes: [],
   });
+
+  const [markerPosition, setMarkerPosition] = useState<[number, number]>([
+    formData.coordinates.latitude,
+    formData.coordinates.longitude,
+  ]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -44,6 +72,17 @@ const NewStationForm: FC<NewStationFormProps> = ({ onSubmit, onCancel }) => {
     }
   };
 
+  const handleMapClick = (lat: number, lng: number) => {
+    setMarkerPosition([lat, lng]);
+    setFormData(prev => ({
+      ...prev,
+      coordinates: {
+        latitude: lat,
+        longitude: lng,
+      },
+    }));
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -66,6 +105,24 @@ const NewStationForm: FC<NewStationFormProps> = ({ onSubmit, onCancel }) => {
           onChange={handleInputChange}
           required
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Select Location on Map</Label>
+        <div className="h-[300px] w-full rounded-md border">
+          <MapContainer
+            center={markerPosition}
+            zoom={13}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+            <Marker position={markerPosition} icon={icon} />
+            <MapClickHandler onMapClick={handleMapClick} />
+          </MapContainer>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
