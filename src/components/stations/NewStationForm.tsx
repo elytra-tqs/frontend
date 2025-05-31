@@ -11,7 +11,6 @@ interface NewStationFormProps {
   onCancel: () => void;
 }
 
-// Fix for default marker icons in Leaflet with Next.js
 const icon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
   iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
@@ -57,13 +56,23 @@ const NewStationForm: FC<NewStationFormProps> = ({ onSubmit, onCancel }) => {
     const { name, value } = e.target;
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
+      const newValue = parent === 'coordinates' ? parseFloat(value) || 0 : value;
+      
       setFormData(prev => ({
         ...prev,
         [parent]: {
           ...(prev[parent as keyof StationFormData] as Record<string, any>),
-          [child]: parent === 'coordinates' ? parseFloat(value) || 0 : value,
+          [child]: newValue,
         },
       }));
+
+      if (parent === 'coordinates') {
+        const newCoordinates = {
+          ...formData.coordinates,
+          [child]: newValue,
+        };
+        setMarkerPosition([newCoordinates.latitude, newCoordinates.longitude]);
+      }
     } else {
       setFormData(prev => ({
         ...prev,
