@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, type ChangeEvent, type FC, type FormEvent, useEffect } from 'react';
 import type { StationFormData } from '../../contexts/StationsContext';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
 interface NewStationFormProps {
@@ -21,8 +21,20 @@ const icon = L.icon({
   shadowSize: [41, 41]
 });
 
-// Component to handle map clicks
-const MapClickHandler = ({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) => {
+// Component to handle map clicks and recentering
+const MapController = ({ 
+  onMapClick, 
+  center 
+}: { 
+  onMapClick: (lat: number, lng: number) => void;
+  center: [number, number];
+}) => {
+  const map = useMap();
+
+  useEffect(() => {
+    map.setView(center);
+  }, [center, map]);
+
   useMapEvents({
     click: (e) => {
       onMapClick(e.latlng.lat, e.latlng.lng);
@@ -129,7 +141,7 @@ const NewStationForm: FC<NewStationFormProps> = ({ onSubmit, onCancel }) => {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
             <Marker position={markerPosition} icon={icon} />
-            <MapClickHandler onMapClick={handleMapClick} />
+            <MapController onMapClick={handleMapClick} center={markerPosition} />
           </MapContainer>
         </div>
       </div>
