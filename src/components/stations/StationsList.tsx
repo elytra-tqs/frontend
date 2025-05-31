@@ -1,8 +1,17 @@
-import { Plus } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { type FC } from "react";
+import { type FC, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useStations } from "../../contexts/StationsContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import EditStationForm from "./EditStationForm";
+import type { StationFormData } from "../../contexts/StationsContext";
 
 interface Station {
   id: string;
@@ -28,6 +37,17 @@ const StationsList: FC<StationsListProps> = ({
   isLoading = false,
 }) => {
   const navigate = useNavigate();
+  const { updateStation } = useStations();
+  const [editingStation, setEditingStation] = useState<Station | null>(null);
+
+  const handleEditStation = async (stationId: number, stationData: StationFormData) => {
+    try {
+      await updateStation(stationId, stationData);
+      setEditingStation(null);
+    } catch (error) {
+      console.error("Failed to update station:", error);
+    }
+  };
 
   if (isLoading && stations.length === 0) {
     return (
@@ -71,6 +91,14 @@ const StationsList: FC<StationsListProps> = ({
                   <div className="flex items-center gap-4">
                     <Button
                       variant="ghost"
+                      size="icon"
+                      onClick={() => setEditingStation(station)}
+                      disabled={isLoading}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
                       onClick={() => navigate(`/stations/${station.id}`)}
                       disabled={isLoading}
                     >
@@ -83,6 +111,26 @@ const StationsList: FC<StationsListProps> = ({
           ))}
         </div>
       )}
+
+      <Dialog open={!!editingStation} onOpenChange={() => setEditingStation(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Station</DialogTitle>
+          </DialogHeader>
+          {editingStation && (
+            <EditStationForm
+              stationId={Number(editingStation.id)}
+              initialData={{
+                name: editingStation.name,
+                location: editingStation.location,
+                coordinates: editingStation.coordinates,
+              }}
+              onSubmit={handleEditStation}
+              onCancel={() => setEditingStation(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
