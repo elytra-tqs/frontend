@@ -46,6 +46,8 @@ interface ChargersContextType {
     stationId: number,
     chargerData: ChargerFormData
   ) => Promise<void>;
+  updateCharger: (chargerId: number, chargerData: ChargerFormData) => Promise<void>;
+  deleteCharger: (chargerId: number) => Promise<void>;
 }
 
 const ChargersContext = createContext<ChargersContextType | undefined>(
@@ -156,6 +158,45 @@ export const ChargersProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateCharger = async (
+    chargerId: number,
+    chargerData: ChargerFormData
+  ): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.put<Charger>(`/chargers/${chargerId}`, chargerData);
+
+      // Update local state
+      setChargers((prev) =>
+        prev.map((charger) =>
+          charger.id === chargerId ? response.data : charger
+        )
+      );
+    } catch (error) {
+      console.error("Failed to update charger", error);
+      setError("Failed to update charger. Please try again later.");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteCharger = async (chargerId: number): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
+      await api.delete(`/chargers/${chargerId}`);
+      setChargers((prev) => prev.filter((charger) => charger.id !== chargerId));
+    } catch (error) {
+      console.error("Failed to delete charger", error);
+      setError("Failed to delete charger. Please try again later.");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <ChargersContext.Provider
       value={{
@@ -167,6 +208,8 @@ export const ChargersProvider = ({ children }: { children: ReactNode }) => {
         fetchChargersByAvailability,
         fetchChargersByStation,
         addChargerToStation,
+        updateCharger,
+        deleteCharger,
       }}
     >
       {children}

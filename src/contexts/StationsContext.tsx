@@ -39,6 +39,8 @@ interface StationsContextProps {
   error: string | null;
   fetchStations: () => void;
   registerStation: (stationData: StationFormData) => Promise<void>;
+  updateStation: (stationId: number, stationData: StationFormData) => Promise<void>;
+  deleteStation: (stationId: number) => Promise<void>;
 }
 
 const StationsContext = createContext<StationsContextProps | undefined>(
@@ -99,13 +101,59 @@ export const StationsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const updateStation = async (stationId: number, stationData: StationFormData) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const backendStation: Station = {
+        id: stationId,
+        name: stationData.name,
+        address: stationData.location,
+        latitude: stationData.coordinates.latitude,
+        longitude: stationData.coordinates.longitude,
+      };
+
+      const response = await api.put<Station>(`/stations/${stationId}`, backendStation);
+
+      setStations((prev) =>
+        prev.map((station) =>
+          station.id === stationId ? response.data : station
+        )
+      );
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Failed to update station", error);
+      setError("Failed to update station. Please try again.");
+      return Promise.reject(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteStation = async (stationId: number) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await api.delete(`/stations/${stationId}`);
+      setStations((prev) => prev.filter((station) => station.id !== stationId));
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Failed to delete station", error);
+      setError("Failed to delete station. Please try again.");
+      return Promise.reject(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchStations();
   }, []);
 
   return (
     <StationsContext.Provider
-      value={{ stations, loading, error, fetchStations, registerStation }}
+      value={{ stations, loading, error, fetchStations, registerStation, updateStation, deleteStation }}
     >
       {children}
     </StationsContext.Provider>
