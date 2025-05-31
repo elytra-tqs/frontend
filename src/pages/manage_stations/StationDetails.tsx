@@ -35,6 +35,8 @@ const StationDetails = () => {
     fetchChargersByStation,
     addChargerToStation,
     updateChargerAvailability,
+    updateCharger,
+    deleteCharger,
   } = useChargers();
   const [showNewChargerDialog, setShowNewChargerDialog] = useState(false);
 
@@ -57,6 +59,25 @@ const StationDetails = () => {
         `Failed to update charger ${chargerId} status to ${newStatus}`,
         error
       );
+    }
+  };
+
+  const handleUpdateCharger = async (
+    chargerId: number,
+    chargerData: { type: string; power: number }
+  ) => {
+    try {
+      await updateCharger(chargerId, { ...chargerData, status: ChargerStatus.AVAILABLE });
+    } catch (error) {
+      console.error(`Failed to update charger ${chargerId}`, error);
+    }
+  };
+
+  const handleDeleteCharger = async (chargerId: number) => {
+    try {
+      await deleteCharger(chargerId);
+    } catch (error) {
+      console.error(`Failed to delete charger ${chargerId}`, error);
     }
   };
 
@@ -137,6 +158,8 @@ const StationDetails = () => {
                   status: c.status,
                 }))}
                 onUpdateChargerStatus={handleUpdateChargerStatus}
+                onUpdateCharger={handleUpdateCharger}
+                onDeleteCharger={handleDeleteCharger}
               />
             ) : (
               <div className="text-center py-8 text-muted-foreground">
