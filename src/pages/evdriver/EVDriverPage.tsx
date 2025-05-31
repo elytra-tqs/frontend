@@ -75,7 +75,7 @@ function MapController({ center, zoom }: { center: [number, number], zoom: numbe
   
   useEffect(() => {
     map.flyTo(center, zoom, {
-      duration: 1,  
+      duration: 1,
       easeLinearity: 0.25
     });
   }, [center, zoom, map]);
@@ -142,6 +142,16 @@ function EVDriverPage() {
       )
     : stations;
 
+  const centerOnUser = () => {
+    if (userLocation && mapRef.current) {
+      mapRef.current.flyTo(userLocation, 15, {
+        duration: 1,
+        easeLinearity: 0.25
+      });
+      setSelectedStation(null);
+    }
+  };
+
   return (
     <div className="relative w-full h-full overflow-hidden">
       {userLocation && (
@@ -184,7 +194,17 @@ function EVDriverPage() {
 
       <MapLegend />
 
-      <div className="absolute top-4 right-4 z-[1000]">
+      <div className="absolute top-4 right-4 z-[1000] flex gap-2">
+        <Button
+          onClick={centerOnUser}
+          variant="outline"
+          className="bg-white/95 backdrop-blur-sm hover:bg-white"
+          title="Center on my location"
+        >
+          <MapPin className="w-4 h-4" />
+          My Location
+        </Button>
+
         <div className="relative">
           <Button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -238,7 +258,6 @@ function EVDriverPage() {
         </div>
       </div>
 
-      {/* Overlay to close dropdown when clicking outside */}
       {isDropdownOpen && (
         <div
           className="fixed inset-0 z-[999]"
