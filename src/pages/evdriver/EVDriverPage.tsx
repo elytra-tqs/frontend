@@ -198,21 +198,21 @@ function EVDriverPage() {
         <Button
           onClick={centerOnUser}
           variant="outline"
-          className="bg-white/95 backdrop-blur-sm hover:bg-white"
+          className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
           title="Center on my location"
         >
           <MapPin className="w-4 h-4" />
-          My Location
+          <span>My Location</span>
         </Button>
 
         <div className="relative">
           <Button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             variant="outline"
-            className="bg-white/95 backdrop-blur-sm hover:bg-white"
+            className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
           >
             <Navigation className="w-4 h-4" />
-            Nearby Stations
+            <span>Nearby Stations</span>
             <ChevronDown 
               className={`w-4 h-4 transition-transform duration-200 ${
                 isDropdownOpen ? 'rotate-180' : ''
