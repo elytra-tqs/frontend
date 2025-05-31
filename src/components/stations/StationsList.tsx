@@ -1,4 +1,4 @@
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { type FC, useState } from "react";
@@ -9,6 +9,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import EditStationForm from "./EditStationForm";
 import type { StationFormData } from "../../contexts/StationsContext";
@@ -37,8 +39,9 @@ const StationsList: FC<StationsListProps> = ({
   isLoading = false,
 }) => {
   const navigate = useNavigate();
-  const { updateStation } = useStations();
+  const { updateStation, deleteStation } = useStations();
   const [editingStation, setEditingStation] = useState<Station | null>(null);
+  const [deletingStation, setDeletingStation] = useState<Station | null>(null);
 
   const handleEditStation = async (stationId: number, stationData: StationFormData) => {
     try {
@@ -46,6 +49,15 @@ const StationsList: FC<StationsListProps> = ({
       setEditingStation(null);
     } catch (error) {
       console.error("Failed to update station:", error);
+    }
+  };
+
+  const handleDeleteStation = async (stationId: number) => {
+    try {
+      await deleteStation(stationId);
+      setDeletingStation(null);
+    } catch (error) {
+      console.error("Failed to delete station:", error);
     }
   };
 
@@ -99,6 +111,14 @@ const StationsList: FC<StationsListProps> = ({
                     </Button>
                     <Button
                       variant="ghost"
+                      size="icon"
+                      onClick={() => setDeletingStation(station)}
+                      disabled={isLoading}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                    <Button
+                      variant="ghost"
                       onClick={() => navigate(`/stations/${station.id}`)}
                       disabled={isLoading}
                     >
@@ -129,6 +149,31 @@ const StationsList: FC<StationsListProps> = ({
               onCancel={() => setEditingStation(null)}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deletingStation} onOpenChange={() => setDeletingStation(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Station</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {deletingStation?.name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeletingStation(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deletingStation && handleDeleteStation(Number(deletingStation.id))}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -40,6 +40,7 @@ interface StationsContextProps {
   fetchStations: () => void;
   registerStation: (stationData: StationFormData) => Promise<void>;
   updateStation: (stationId: number, stationData: StationFormData) => Promise<void>;
+  deleteStation: (stationId: number) => Promise<void>;
 }
 
 const StationsContext = createContext<StationsContextProps | undefined>(
@@ -130,13 +131,29 @@ export const StationsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const deleteStation = async (stationId: number) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await api.delete(`/stations/${stationId}`);
+      setStations((prev) => prev.filter((station) => station.id !== stationId));
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Failed to delete station", error);
+      setError("Failed to delete station. Please try again.");
+      return Promise.reject(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchStations();
   }, []);
 
   return (
     <StationsContext.Provider
-      value={{ stations, loading, error, fetchStations, registerStation, updateStation }}
+      value={{ stations, loading, error, fetchStations, registerStation, updateStation, deleteStation }}
     >
       {children}
     </StationsContext.Provider>
