@@ -3,9 +3,9 @@ import AppBreadcrumb from "../navigation/AppBreadcrumb";
 
 export function AppLayout() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background flex flex-col">
       <AppBreadcrumb />
-      <main>
+      <main className="flex-1">
         <Outlet />
       </main>
     </div>
