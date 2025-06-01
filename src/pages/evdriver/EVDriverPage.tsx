@@ -211,12 +211,19 @@ function EVDriverPage() {
               <CardContent className="p-3 -mt-5 -mb-5">
                 <div className="space-y-2">
                   {sortedStations.map((station) => (
-                    <div
+                    <button
                       key={station.id}
-                      className="flex flex-col p-3 bg-white/80 rounded-lg border border-gray-200 hover:bg-white/90 transition-all cursor-pointer group"
+                      className="w-full text-left flex flex-col p-3 bg-white/80 rounded-lg border border-gray-200 hover:bg-white/90 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                       onClick={() => {
                         setSelectedStation(station);
                         setIsDropdownOpen(false);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedStation(station);
+                          setIsDropdownOpen(false);
+                        }
                       }}
                     >
                       <div className="font-medium text-gray-800 group-hover:text-blue-600 transition-colors">
@@ -235,7 +242,7 @@ function EVDriverPage() {
                           km away
                         </div>
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
               </CardContent>
