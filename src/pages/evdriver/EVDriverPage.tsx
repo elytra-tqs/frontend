@@ -1,9 +1,15 @@
 import { useEffect, useState, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
 import L from "leaflet";
 import { ChevronDown, MapPin, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+const mapStyles = `
+  .leaflet-top.leaflet-left .leaflet-control-zoom {
+    display: none !important;
+  }
+`;
 
 const stations = [
   {
@@ -25,27 +31,6 @@ const stations = [
     coordinates: { latitude: 40.6412, longitude: -8.6531 },
   },
 ];
-
-const MapLegend = () => (
-  <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm px-4 py-3 rounded-lg shadow-lg border text-sm z-[1000]">
-    <div className="flex items-center mb-2">
-      <img
-        src="https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png"
-        alt="User"
-        className="w-5 h-5 mr-2"
-      />
-      <span className="font-medium">Your Location</span>
-    </div>
-    <div className="flex items-center">
-      <img
-        src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png"
-        alt="Station"
-        className="w-5 h-5 mr-2"
-      />
-      <span className="font-medium">Charging Station</span>
-    </div>
-  </div>
-);
 
 const userIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
@@ -154,6 +139,7 @@ function EVDriverPage() {
 
   return (
     <div className="relative w-full h-full overflow-hidden">
+      <style>{mapStyles}</style>
       {userLocation && (
         <MapContainer
           center={userLocation}
@@ -162,8 +148,10 @@ function EVDriverPage() {
           attributionControl={false}
           className="z-0"
           ref={mapRef}
+          zoomControl={false}
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <ZoomControl position="bottomright" />
           <Marker position={userLocation} icon={userIcon}>
             <Popup>Your Location</Popup>
           </Marker>
@@ -191,8 +179,6 @@ function EVDriverPage() {
           )}
         </MapContainer>
       )}
-
-      <MapLegend />
 
       <div className="absolute top-4 right-4 z-[1000] flex gap-2">
         <Button
