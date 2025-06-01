@@ -252,9 +252,16 @@ function EVDriverPage() {
       </div>
 
       {isDropdownOpen && (
-        <div
-          className="fixed inset-0 z-[1000]"
+        <button
+          type="button"
+          aria-label="Close stations list"
+          className="fixed inset-0 z-[1000] w-full h-full bg-transparent border-0 p-0 cursor-default focus:outline-none"
           onClick={() => setIsDropdownOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setIsDropdownOpen(false);
+            }
+          }}
         />
       )}
     </div>
