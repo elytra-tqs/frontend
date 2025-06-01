@@ -180,7 +180,7 @@ function EVDriverPage() {
         </MapContainer>
       )}
 
-      <div className="absolute top-4 right-4 z-[1000] flex gap-2">
+      <div className="absolute top-4 right-4 z-[1001] flex gap-2 pointer-events-auto">
         <Button
           onClick={centerOnUser}
           variant="outline"
@@ -207,7 +207,7 @@ function EVDriverPage() {
           </Button>
 
           {isDropdownOpen && (
-            <Card className="absolute top-full right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-white/95 backdrop-blur-sm border shadow-2xl z-[1001]">
+            <Card className="absolute top-full right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-white/95 backdrop-blur-sm border shadow-2xl z-[1002]">
               <CardContent className="p-3 -mt-5 -mb-5">
                 <div className="space-y-2">
                   {sortedStations.map((station) => (
@@ -246,7 +246,7 @@ function EVDriverPage() {
 
       {isDropdownOpen && (
         <div
-          className="fixed inset-0 z-[999]"
+          className="fixed inset-0 z-[1000]"
           onClick={() => setIsDropdownOpen(false)}
         />
       )}
