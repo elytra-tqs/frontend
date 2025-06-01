@@ -138,7 +138,7 @@ function EVDriverPage() {
   };
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div className="fixed inset-0 w-full h-full overflow-hidden">
       <style>{mapStyles}</style>
       {userLocation && (
         <MapContainer
