@@ -1,0 +1,214 @@
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { PlusIcon, AlertCircle } from "lucide-react";
+import { useStations } from "../../contexts/StationsContext";
+import { useChargers, ChargerStatus } from "../../contexts/ChargersContext";
+import NewChargerForm from "../../components/stations/NewChargerForm";
+
+interface ChargingStation {
+  id: string;
+  name: string;
+  type: string;
+  power: number;
+  status: ChargerStatus;
+  lastMaintenance?: string;
+}
+
+// Dummy data for demonstration
+const dummyChargingStations: ChargingStation[] = [
+  {
+    id: "1",
+    name: "Charger 1",
+    type: "Type 2",
+    power: 22,
+    status: ChargerStatus.AVAILABLE,
+    lastMaintenance: "2024-03-15",
+  },
+  {
+    id: "2",
+    name: "Charger 2",
+    type: "CCS",
+    power: 50,
+    status: ChargerStatus.BEING_USED,
+    lastMaintenance: "2024-03-10",
+  },
+  {
+    id: "3",
+    name: "Charger 3",
+    type: "Type 2",
+    power: 22,
+    status: ChargerStatus.UNDER_MAINTENANCE,
+    lastMaintenance: "2024-03-20",
+  },
+];
+
+function StationOperatorPage() {
+  const { stations } = useStations();
+  const { addChargerToStation, updateChargerAvailability } = useChargers();
+  const [chargingStations, setChargingStations] = useState<ChargingStation[]>(dummyChargingStations);
+  const [showNewChargerForm, setShowNewChargerForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleUpdateStatus = async (stationId: string, newStatus: ChargerStatus) => {
+    try {
+      await updateChargerAvailability(Number(stationId), newStatus);
+      setChargingStations(chargingStations.map(station => 
+        station.id === stationId ? { ...station, status: newStatus } : station
+      ));
+    } catch (err) {
+      setError("Failed to update charger status. Please try again.");
+    }
+  };
+
+  const handleAddCharger = async (stationId: number, chargerData: { type: string; power: number; status: ChargerStatus }) => {
+    try {
+      await addChargerToStation(stationId, chargerData);
+      setShowNewChargerForm(false);
+    } catch (err) {
+      setError("Failed to add charger. Please try again.");
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-8">
+      <h1 className="text-2xl font-bold mb-8">Operator Dashboard</h1>
+
+      <div className="space-y-8">
+        {/* Station Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>My Station</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stations.length > 0 ? (
+              <div className="space-y-4">
+                <p className="text-sm">
+                  <span className="font-medium">Name:</span> {stations[0].name}
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Location:</span> {stations[0].address}
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Status:</span>{" "}
+                  <span className="inline-block px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                    {stations[0].status || "available"}
+                  </span>
+                </p>
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No station information available.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Charging Stations Management */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Charging Stations</CardTitle>
+            {!showNewChargerForm && (
+              <Button size="sm" onClick={() => setShowNewChargerForm(true)}>
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Add Charging Station
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 flex items-center">
+                <AlertCircle className="w-5 h-5 mr-2" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {showNewChargerForm ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Add New Charging Station</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {stations.length > 0 && (
+                    <NewChargerForm
+                      stationId={stations[0].id || 0}
+                      onSubmit={handleAddCharger}
+                      onCancel={() => setShowNewChargerForm(false)}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {chargingStations.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {chargingStations.map((station) => (
+                      <Card key={station.id} className="hover:shadow-lg transition-shadow">
+                        <CardContent className="p-6">
+                          <h3 className="text-lg font-semibold mb-2">{station.name}</h3>
+                          <div className="space-y-2">
+                            <p className="text-sm">
+                              <span className="font-medium">Type:</span> {station.type}
+                            </p>
+                            <p className="text-sm">
+                              <span className="font-medium">Power:</span> {station.power} kW
+                            </p>
+                            <p className="text-sm">
+                              <span className="font-medium">Status:</span>{" "}
+                              <span
+                                className={`inline-block px-2 py-1 rounded-full text-xs ${
+                                  station.status === ChargerStatus.AVAILABLE
+                                    ? "bg-green-100 text-green-800"
+                                    : station.status === ChargerStatus.BEING_USED
+                                    ? "bg-blue-100 text-blue-800"
+                                    : station.status === ChargerStatus.UNDER_MAINTENANCE
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-red-100 text-red-800"
+                                }`}
+                              >
+                                {station.status.replace(/_/g, " ").toLowerCase()}
+                              </span>
+                            </p>
+                            {station.lastMaintenance && (
+                              <p className="text-sm">
+                                <span className="font-medium">Last Maintenance:</span>{" "}
+                                {station.lastMaintenance}
+                              </p>
+                            )}
+                          </div>
+                          <div className="mt-4 flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleUpdateStatus(station.id, ChargerStatus.UNDER_MAINTENANCE)}
+                              disabled={station.status === ChargerStatus.UNDER_MAINTENANCE}
+                            >
+                              Set Maintenance
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleUpdateStatus(station.id, ChargerStatus.AVAILABLE)}
+                              disabled={station.status === ChargerStatus.AVAILABLE}
+                            >
+                              Set Available
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No charging stations available.
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+export default StationOperatorPage;
+  
