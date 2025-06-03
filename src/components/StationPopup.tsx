@@ -1,9 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MapPin, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 import { useChargers, ChargerStatus } from "../contexts/ChargersContext";
 
 interface Charger {
@@ -27,8 +30,26 @@ interface Station {
   chargers?: Charger[];
 }
 
+interface TimeSlot {
+  time: string;
+  isOccupied: boolean;
+}
+
 export function StationPopup({ station }: Readonly<{ station: Station }>) {
   const { loading: chargersLoading, fetchChargersByStation } = useChargers();
+  const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
+  const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
+
+  // Generate time slots for morning (8 AM to 12 PM) and afternoon (1 PM to 5 PM)
+  const morningSlots: TimeSlot[] = Array.from({ length: 5 }, (_, i) => ({
+    time: `${8 + i}:00`,
+    isOccupied: Math.random() > 0.7, // Randomly set some slots as occupied for demo
+  }));
+
+  const afternoonSlots: TimeSlot[] = Array.from({ length: 5 }, (_, i) => ({
+    time: `${13 + i}:00`,
+    isOccupied: Math.random() > 0.7, // Randomly set some slots as occupied for demo
+  }));
 
   useEffect(() => {
     if (station.id) {
@@ -105,8 +126,8 @@ export function StationPopup({ station }: Readonly<{ station: Station }>) {
                 className="w-full -mt-5"
                 disabled={charger.status !== ChargerStatus.AVAILABLE}
                 onClick={() => {
-                  // implement booking functionality
-                  console.log("Book charger:", charger.id);
+                  setSelectedCharger(charger);
+                  setIsBookingDialogOpen(true);
                 }}
               >
                 {charger.status === ChargerStatus.AVAILABLE ? "Book Now" : "Unavailable"}
@@ -115,6 +136,70 @@ export function StationPopup({ station }: Readonly<{ station: Station }>) {
           ))}
         </div>
       </ScrollArea>
+
+      <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>
+              Book Charger {selectedCharger?.id} - {selectedCharger?.type}
+            </DialogTitle>
+          </DialogHeader>
+          <Tabs defaultValue="morning" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="morning">Morning</TabsTrigger>
+              <TabsTrigger value="afternoon">Afternoon</TabsTrigger>
+            </TabsList>
+            <TabsContent value="morning" className="space-y-4">
+              {morningSlots.map((slot) => (
+                <div key={slot.time} className="flex items-center justify-between p-2 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{slot.time}</span>
+                    <Label
+                      className={slot.isOccupied ? "text-red-500" : "text-green-500"}
+                    >
+                      {slot.isOccupied ? "Occupied" : "Free"}
+                    </Label>
+                  </div>
+                  <Button
+                    size="sm"
+                    disabled={slot.isOccupied}
+                    onClick={() => {
+                      console.log(`Booking charger ${selectedCharger?.id} for ${slot.time}`);
+                      setIsBookingDialogOpen(false);
+                    }}
+                  >
+                    Book
+                  </Button>
+                </div>
+              ))}
+            </TabsContent>
+            <TabsContent value="afternoon" className="space-y-4">
+              {afternoonSlots.map((slot) => (
+                <div key={slot.time} className="flex items-center justify-between p-2 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{slot.time}</span>
+                    <Label
+                      className={slot.isOccupied ? "text-red-500" : "text-green-500"}
+                    >
+                      {slot.isOccupied ? "Occupied" : "Free"}
+                    </Label>
+                  </div>
+                  <Button
+                    size="sm"
+                    disabled={slot.isOccupied}
+                    onClick={() => {
+                      console.log(`Booking charger ${selectedCharger?.id} for ${slot.time}`);
+                      setIsBookingDialogOpen(false);
+                    }}
+                  >
+                    Book
+                  </Button>
+                </div>
+              ))}
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 
