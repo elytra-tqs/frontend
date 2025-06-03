@@ -47,7 +47,7 @@ export function AppLayout() {
         </Sidebar>
         <div className="flex-1 flex flex-col">
           <div className="relative z-[1002] pointer-events-none">
-            <div className="pointer-events-auto flex items-start gap-4 px-4 py-2">
+            <div className="pointer-events-auto flex items-start gap-4 px-4 py-2 w-[50%]">
               <div className="flex items-start py-2">
                 <SidebarTrigger className="hover:bg-sidebar hover:text-sidebar-foreground" />
               </div>
