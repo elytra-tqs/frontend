@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -46,7 +45,6 @@ export default function SignUp() {
 
   return (
     <div className="flex h-screen">
-      {/* Left side - Form */}
       <div className="w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-6">
           <div className="space-y-2 text-center">
@@ -139,7 +137,6 @@ export default function SignUp() {
           </Form>
         </div>
       </div>
-      {/* Right side - Image */}
       <div className="w-1/2 bg-gray-100 flex items-center justify-center">
         <img
           src="/elytra.png"
