@@ -214,12 +214,12 @@ function EVDriverPage() {
     ? [...stations].sort(
         (a, b) =>
           getDistance(userLocation, [
-            a.latitude || 0,
-            a.longitude || 0,
+            a.latitude ?? 0,
+            a.longitude ?? 0,
           ]) -
           getDistance(userLocation, [
-            b.latitude || 0,
-            b.longitude || 0,
+            b.latitude ?? 0,
+            b.longitude ?? 0,
           ])
       )
     : stations;
@@ -281,7 +281,7 @@ function EVDriverPage() {
               </Marker>
             )
           ))}
-          {selectedStation && selectedStation.latitude && selectedStation.longitude && (
+          {selectedStation?.latitude && selectedStation?.longitude && (
             <MapController 
               center={[selectedStation.latitude, selectedStation.longitude]} 
               zoom={15} 
