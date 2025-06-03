@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useStations } from "../../contexts/StationsContext";
+import { useChargers, ChargerStatus } from "../../contexts/ChargersContext";
 
 const mapStyles = `
   .leaflet-top.leaflet-left .leaflet-control-zoom {
@@ -15,54 +17,24 @@ const mapStyles = `
 
 interface Charger {
   id: number;
-  name: string;
   type: string;
   power: number;
-  status: string;
+  status: ChargerStatus;
+  stationId: number;
 }
 
 interface Station {
-  id: string;
+  id?: number;
   name: string;
-  location: string;
-  coordinates: { latitude: number; longitude: number };
-  chargers: Charger[];
+  address: string;
+  latitude?: number;
+  longitude?: number;
+  chargerTypes?: string[];
+  status?: "available" | "maintenance" | "offline";
+  lastMaintenance?: string;
+  numberOfChargers?: number;
+  chargers?: Charger[];
 }
-
-const stations: Station[] = [
-  {
-    id: "1",
-    name: "Aveiro City Center Station",
-    location: "Aveiro City Center, Portugal",
-    coordinates: { latitude: 40.6405, longitude: -8.6538 },
-    chargers: [
-      { id: 1, name: "Charger 1", type: "Type 2", power: 22, status: "AVAILABLE" },
-      { id: 2, name: "Charger 2", type: "CCS", power: 50, status: "BEING_USED" },
-      { id: 3, name: "Charger 3", type: "Type 2", power: 22, status: "AVAILABLE" },
-    ],
-  },
-  {
-    id: "2",
-    name: "Universidade de Aveiro",
-    location: "Universidade de Aveiro, Portugal",
-    coordinates: { latitude: 40.6302, longitude: -8.6576 },
-    chargers: [
-      { id: 4, name: "Charger 1", type: "CCS", power: 50, status: "AVAILABLE" },
-      { id: 5, name: "Charger 2", type: "Type 2", power: 22, status: "UNDER_MAINTENANCE" },
-    ],
-  },
-  {
-    id: "3",
-    name: "Forum Aveiro Station",
-    location: "Forum Aveiro, Portugal",
-    coordinates: { latitude: 40.6412, longitude: -8.6531 },
-    chargers: [
-      { id: 6, name: "Charger 1", type: "Type 2", power: 22, status: "AVAILABLE" },
-      { id: 7, name: "Charger 2", type: "CCS", power: 50, status: "AVAILABLE" },
-      { id: 8, name: "Charger 3", type: "Type 2", power: 22, status: "OUT_OF_SERVICE" },
-    ],
-  },
-];
 
 const userIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
@@ -100,51 +72,67 @@ function MapController({ center, zoom }: { center: [number, number], zoom: numbe
   return null;
 }
 
-function StationPopup({ station }: { station: Station }) {
-  const getStatusColor = (status: string): string => {
+function StationPopup({ station }: Readonly<{ station: Station }>) {
+  const { loading: chargersLoading, fetchChargersByStation } = useChargers();
+
+  useEffect(() => {
+    if (station.id) {
+      fetchChargersByStation(station.id);
+    }
+  }, [station.id]);
+
+  const getStatusColor = (status: ChargerStatus): string => {
     switch (status) {
-      case "AVAILABLE":
+      case ChargerStatus.AVAILABLE:
         return "bg-green-500";
-      case "BEING_USED":
+      case ChargerStatus.BEING_USED:
         return "bg-blue-500";
-      case "UNDER_MAINTENANCE":
+      case ChargerStatus.UNDER_MAINTENANCE:
         return "bg-yellow-500";
-      case "OUT_OF_SERVICE":
+      case ChargerStatus.OUT_OF_SERVICE:
         return "bg-red-500";
       default:
         return "bg-gray-500";
     }
   };
 
-  const getStatusText = (status: string): string => {
+  const getStatusText = (status: ChargerStatus): string => {
     switch (status) {
-      case "AVAILABLE":
+      case ChargerStatus.AVAILABLE:
         return "Available";
-      case "BEING_USED":
+      case ChargerStatus.BEING_USED:
         return "In Use";
-      case "UNDER_MAINTENANCE":
+      case ChargerStatus.UNDER_MAINTENANCE:
         return "Maintenance";
-      case "OUT_OF_SERVICE":
+      case ChargerStatus.OUT_OF_SERVICE:
         return "Out of Service";
       default:
         return status;
     }
   };
 
+  if (chargersLoading) {
+    return (
+      <div className="w-64 p-4 text-center">
+        <p>Loading chargers...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-64">
       <h3 className="font-semibold text-lg -mb-3">{station.name}</h3>
       <p className="text-xs text-gray-600 flex items-center gap-1">
         <MapPin className="w-3 h-3" />
-        {station.location}
+        {station.address}
       </p>
       <ScrollArea className="h-[200px] pr-4">
         <div className="space-y-2">
-          {station.chargers.map((charger) => (
+          {station.chargers?.map((charger) => (
             <Card key={charger.id} className="p-3">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h4 className="font-medium">{charger.name}</h4>
+                  <h4 className="font-medium">Charger {charger.id}</h4>
                   <div className="flex justify-between items-center text-sm text-gray-600">
                     <span>{charger.type} | </span>
                     <div className="flex items-center gap-1">
@@ -160,13 +148,13 @@ function StationPopup({ station }: { station: Station }) {
               </div>
               <Button
                 className="w-full -mt-5"
-                disabled={charger.status !== "AVAILABLE"}
+                disabled={charger.status !== ChargerStatus.AVAILABLE}
                 onClick={() => {
                   // implement booking functionality
                   console.log("Book charger:", charger.id);
                 }}
               >
-                {charger.status === "AVAILABLE" ? "Book Now" : "Unavailable"}
+                {charger.status === ChargerStatus.AVAILABLE ? "Book Now" : "Unavailable"}
               </Button>
             </Card>
           ))}
@@ -179,8 +167,9 @@ function StationPopup({ station }: { station: Station }) {
 function EVDriverPage() {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedStation, setSelectedStation] = useState<typeof stations[0] | null>(null);
+  const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const { stations, loading: stationsLoading, error: stationsError } = useStations();
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
@@ -225,12 +214,12 @@ function EVDriverPage() {
     ? [...stations].sort(
         (a, b) =>
           getDistance(userLocation, [
-            a.coordinates.latitude,
-            a.coordinates.longitude,
+            a.latitude ?? 0,
+            a.longitude ?? 0,
           ]) -
           getDistance(userLocation, [
-            b.coordinates.latitude,
-            b.coordinates.longitude,
+            b.latitude ?? 0,
+            b.longitude ?? 0,
           ])
       )
     : stations;
@@ -244,6 +233,22 @@ function EVDriverPage() {
       setSelectedStation(null);
     }
   };
+
+  if (stationsLoading) {
+    return (
+      <div className="fixed inset-0 w-full h-full flex items-center justify-center">
+        <p>Loading stations...</p>
+      </div>
+    );
+  }
+
+  if (stationsError) {
+    return (
+      <div className="fixed inset-0 w-full h-full flex items-center justify-center">
+        <p className="text-red-500">Error: {stationsError}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 w-full h-full overflow-hidden">
@@ -264,22 +269,21 @@ function EVDriverPage() {
             <Popup>Your Location</Popup>
           </Marker>
           {stations.map((station) => (
-            <Marker
-              key={station.id}
-              position={[
-                station.coordinates.latitude,
-                station.coordinates.longitude,
-              ]}
-              icon={stationIcon}
-            >
-              <Popup>
-                <StationPopup station={station} />
-              </Popup>
-            </Marker>
+            station.latitude && station.longitude && (
+              <Marker
+                key={station.id}
+                position={[station.latitude, station.longitude]}
+                icon={stationIcon}
+              >
+                <Popup>
+                  <StationPopup station={station} />
+                </Popup>
+              </Marker>
+            )
           ))}
-          {selectedStation && (
+          {selectedStation?.latitude && selectedStation?.longitude && (
             <MapController 
-              center={[selectedStation.coordinates.latitude, selectedStation.coordinates.longitude]} 
+              center={[selectedStation.latitude, selectedStation.longitude]} 
               zoom={15} 
             />
           )}
@@ -336,14 +340,14 @@ function EVDriverPage() {
                         {station.name}
                       </div>
                       <div className="text-sm text-gray-600 mt-1">
-                        {station.location}
+                        {station.address}
                       </div>
-                      {userLocation && (
+                      {userLocation && station.latitude && station.longitude && (
                         <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                           <Navigation className="w-3 h-3" />
                           {getDistance(userLocation, [
-                            station.coordinates.latitude,
-                            station.coordinates.longitude,
+                            station.latitude,
+                            station.longitude,
                           ]).toFixed(2)}{" "}
                           km away
                         </div>
