@@ -27,8 +27,10 @@ const formSchema = z.object({
   userType: z.enum(["ev_driver", "station_operator", "admin"]),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 export default function SignUp() {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "",
@@ -39,7 +41,7 @@ export default function SignUp() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: FormValues) {
     console.log(values);
   }
 
@@ -56,7 +58,7 @@ export default function SignUp() {
               <FormField
                 control={form.control}
                 name="username"
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
@@ -71,7 +73,7 @@ export default function SignUp() {
                 <FormField
                   control={form.control}
                   name="firstName"
-                  render={({ field }) => (
+                  render={({ field }: { field: any }) => (
                     <FormItem>
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
@@ -84,7 +86,7 @@ export default function SignUp() {
                 <FormField
                   control={form.control}
                   name="lastName"
-                  render={({ field }) => (
+                  render={({ field }: { field: any }) => (
                     <FormItem>
                       <FormLabel>Last Name</FormLabel>
                       <FormControl>
@@ -98,7 +100,7 @@ export default function SignUp() {
               <FormField
                 control={form.control}
                 name="userType"
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel>User Type</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -115,12 +117,12 @@ export default function SignUp() {
                     </Select>
                     <FormMessage />
                   </FormItem>
-                  )}
-                />
+                )}
+              />
               <FormField
                 control={form.control}
                 name="password"
-                render={({ field }) => (
+                render={({ field }: { field: any }) => (
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
