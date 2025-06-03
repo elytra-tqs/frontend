@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
+import { TimeSlotList } from "@/components/TimeSlotList";
 import { useChargers, ChargerStatus } from "../contexts/ChargersContext";
 
 interface Charger {
@@ -42,12 +42,12 @@ export function StationPopup({ station }: Readonly<{ station: Station }>) {
 
   const morningSlots: TimeSlot[] = Array.from({ length: 5 }, (_, i) => ({
     time: `${8 + i}:00`,
-    isOccupied: Math.random() > 0.7, 
+    isOccupied: Math.random() > 0.7,
   }));
 
   const afternoonSlots: TimeSlot[] = Array.from({ length: 5 }, (_, i) => ({
     time: `${13 + i}:00`,
-    isOccupied: Math.random() > 0.7, 
+    isOccupied: Math.random() > 0.7,
   }));
 
   useEffect(() => {
@@ -84,6 +84,11 @@ export function StationPopup({ station }: Readonly<{ station: Station }>) {
       default:
         return status;
     }
+  };
+
+  const handleBookSlot = (time: string) => {
+    console.log(`Booking charger ${selectedCharger?.id} for ${time}`);
+    setIsBookingDialogOpen(false);
   };
 
   if (chargersLoading) {
@@ -148,53 +153,17 @@ export function StationPopup({ station }: Readonly<{ station: Station }>) {
               <TabsTrigger value="morning">Morning</TabsTrigger>
               <TabsTrigger value="afternoon">Afternoon</TabsTrigger>
             </TabsList>
-            <TabsContent value="morning" className="space-y-4">
-              {morningSlots.map((slot) => (
-                <div key={slot.time} className="flex items-center justify-between p-2 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{slot.time}</span>
-                    <Label
-                      className={slot.isOccupied ? "text-red-500" : "text-green-500"}
-                    >
-                      {slot.isOccupied ? "Occupied" : "Free"}
-                    </Label>
-                  </div>
-                  <Button
-                    size="sm"
-                    disabled={slot.isOccupied}
-                    onClick={() => {
-                      console.log(`Booking charger ${selectedCharger?.id} for ${slot.time}`);
-                      setIsBookingDialogOpen(false);
-                    }}
-                  >
-                    Book
-                  </Button>
-                </div>
-              ))}
+            <TabsContent value="morning">
+              <TimeSlotList
+                slots={morningSlots}
+                onBook={handleBookSlot}
+              />
             </TabsContent>
-            <TabsContent value="afternoon" className="space-y-4">
-              {afternoonSlots.map((slot) => (
-                <div key={slot.time} className="flex items-center justify-between p-2 border rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{slot.time}</span>
-                    <Label
-                      className={slot.isOccupied ? "text-red-500" : "text-green-500"}
-                    >
-                      {slot.isOccupied ? "Occupied" : "Free"}
-                    </Label>
-                  </div>
-                  <Button
-                    size="sm"
-                    disabled={slot.isOccupied}
-                    onClick={() => {
-                      console.log(`Booking charger ${selectedCharger?.id} for ${slot.time}`);
-                      setIsBookingDialogOpen(false);
-                    }}
-                  >
-                    Book
-                  </Button>
-                </div>
-              ))}
+            <TabsContent value="afternoon">
+              <TimeSlotList
+                slots={afternoonSlots}
+                onBook={handleBookSlot}
+              />
             </TabsContent>
           </Tabs>
         </DialogContent>
