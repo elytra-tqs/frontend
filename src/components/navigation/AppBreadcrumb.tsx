@@ -25,7 +25,7 @@ export function AppBreadcrumb() {
   }
 
   return (
-    <Breadcrumb className="mb-6 px-4 py-2 pointer-events-none">
+    <Breadcrumb className="mb-6 px-4 py-3 pointer-events-none">
       <BreadcrumbList className="pointer-events-auto">
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
