@@ -57,6 +57,7 @@ function StationOperatorPage() {
         station.id === stationId ? { ...station, status: newStatus } : station
       ));
     } catch (err) {
+      console.error(err);
       setError("Failed to update charger status. Please try again.");
     }
   };
@@ -66,6 +67,7 @@ function StationOperatorPage() {
       await addChargerToStation(stationId, chargerData);
       setShowNewChargerForm(false);
     } catch (err) {
+      console.error(err);
       setError("Failed to add charger. Please try again.");
     }
   };
@@ -92,7 +94,7 @@ function StationOperatorPage() {
                 <p className="text-sm">
                   <span className="font-medium">Status:</span>{" "}
                   <span className="inline-block px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                    {stations[0].status || "available"}
+                    {stations[0].status ?? "available"}
                   </span>
                 </p>
               </div>
@@ -129,7 +131,7 @@ function StationOperatorPage() {
                 <CardContent>
                   {stations.length > 0 && (
                     <NewChargerForm
-                      stationId={stations[0].id || 0}
+                      stationId={stations[0].id ?? 0}
                       onSubmit={handleAddCharger}
                       onCancel={() => setShowNewChargerForm(false)}
                     />
@@ -140,61 +142,61 @@ function StationOperatorPage() {
               <div className="space-y-4">
                 {chargingStations.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {chargingStations.map((station) => (
-                      <Card key={station.id} className="hover:shadow-lg transition-shadow">
-                        <CardContent className="p-6">
-                          <h3 className="text-lg font-semibold mb-2">{station.name}</h3>
-                          <div className="space-y-2">
-                            <p className="text-sm">
-                              <span className="font-medium">Type:</span> {station.type}
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-medium">Power:</span> {station.power} kW
-                            </p>
-                            <p className="text-sm">
-                              <span className="font-medium">Status:</span>{" "}
-                              <span
-                                className={`inline-block px-2 py-1 rounded-full text-xs ${
-                                  station.status === ChargerStatus.AVAILABLE
-                                    ? "bg-green-100 text-green-800"
-                                    : station.status === ChargerStatus.BEING_USED
-                                    ? "bg-blue-100 text-blue-800"
-                                    : station.status === ChargerStatus.UNDER_MAINTENANCE
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : "bg-red-100 text-red-800"
-                                }`}
-                              >
-                                {station.status.replace(/_/g, " ").toLowerCase()}
-                              </span>
-                            </p>
-                            {station.lastMaintenance && (
+                    {chargingStations.map((station) => {
+                      let statusColor = "bg-red-100 text-red-800";
+                      if (station.status === ChargerStatus.AVAILABLE) {
+                        statusColor = "bg-green-100 text-green-800";
+                      } else if (station.status === ChargerStatus.BEING_USED) {
+                        statusColor = "bg-blue-100 text-blue-800";
+                      } else if (station.status === ChargerStatus.UNDER_MAINTENANCE) {
+                        statusColor = "bg-yellow-100 text-yellow-800";
+                      }
+                      return (
+                        <Card key={station.id} className="hover:shadow-lg transition-shadow">
+                          <CardContent className="p-6">
+                            <h3 className="text-lg font-semibold mb-2">{station.name}</h3>
+                            <div className="space-y-2">
                               <p className="text-sm">
-                                <span className="font-medium">Last Maintenance:</span>{" "}
-                                {station.lastMaintenance}
+                                <span className="font-medium">Type:</span> {station.type}
                               </p>
-                            )}
-                          </div>
-                          <div className="mt-4 flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleUpdateStatus(station.id, ChargerStatus.UNDER_MAINTENANCE)}
-                              disabled={station.status === ChargerStatus.UNDER_MAINTENANCE}
-                            >
-                              Set Maintenance
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleUpdateStatus(station.id, ChargerStatus.AVAILABLE)}
-                              disabled={station.status === ChargerStatus.AVAILABLE}
-                            >
-                              Set Available
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                              <p className="text-sm">
+                                <span className="font-medium">Power:</span> {station.power} kW
+                              </p>
+                              <p className="text-sm">
+                                <span className="font-medium">Status:</span>{" "}
+                                <span className={`inline-block px-2 py-1 rounded-full text-xs ${statusColor}`}>
+                                  {station.status.replace(/_/g, " ").toLowerCase()}
+                                </span>
+                              </p>
+                              {station.lastMaintenance && (
+                                <p className="text-sm">
+                                  <span className="font-medium">Last Maintenance:</span>{" "}
+                                  {station.lastMaintenance}
+                                </p>
+                              )}
+                            </div>
+                            <div className="mt-4 flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUpdateStatus(station.id, ChargerStatus.UNDER_MAINTENANCE)}
+                                disabled={station.status === ChargerStatus.UNDER_MAINTENANCE}
+                              >
+                                Set Maintenance
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUpdateStatus(station.id, ChargerStatus.AVAILABLE)}
+                                disabled={station.status === ChargerStatus.AVAILABLE}
+                              >
+                                Set Available
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
