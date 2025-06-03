@@ -40,15 +40,14 @@ export function StationPopup({ station }: Readonly<{ station: Station }>) {
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
 
-  // Generate time slots for morning (8 AM to 12 PM) and afternoon (1 PM to 5 PM)
   const morningSlots: TimeSlot[] = Array.from({ length: 5 }, (_, i) => ({
     time: `${8 + i}:00`,
-    isOccupied: Math.random() > 0.7, // Randomly set some slots as occupied for demo
+    isOccupied: Math.random() > 0.7, 
   }));
 
   const afternoonSlots: TimeSlot[] = Array.from({ length: 5 }, (_, i) => ({
     time: `${13 + i}:00`,
-    isOccupied: Math.random() > 0.7, // Randomly set some slots as occupied for demo
+    isOccupied: Math.random() > 0.7, 
   }));
 
   useEffect(() => {
