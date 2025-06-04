@@ -252,9 +252,9 @@ function EVDriverPage() {
               <CardContent className="p-3 -mt-5 -mb-5">
                 <div className="space-y-2 mb-4">
                   <div>
-                    <label id="availability-label" className="block text-xs font-semibold mb-1">Availability</label>
+                    <label htmlFor="availability-filter" className="block text-xs font-semibold mb-1">Availability</label>
                     <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
-                      <SelectTrigger className="w-full" aria-label="Availability">
+                      <SelectTrigger id="availability-filter" className="w-full" aria-labelledby="availability-filter">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -267,9 +267,9 @@ function EVDriverPage() {
                     </Select>
                   </div>
                   <div>
-                    <label id="charger-type-label" className="block text-xs font-semibold mb-1">Charger Type</label>
+                    <label htmlFor="charger-type-filter" className="block text-xs font-semibold mb-1">Charger Type</label>
                     <Select value={chargerTypeFilter} onValueChange={setChargerTypeFilter}>
-                      <SelectTrigger className="w-full" aria-label="Charger Type">
+                      <SelectTrigger id="charger-type-filter" className="w-full" aria-labelledby="charger-type-filter">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -290,7 +290,11 @@ function EVDriverPage() {
                       onChange={e => setMaxDistance(Number(e.target.value))}
                       className="w-full border rounded px-2 py-1 text-sm"
                       placeholder="0 = unlimited"
+                      aria-describedby="max-distance-help"
                     />
+                    <div id="max-distance-help" className="sr-only">
+                      Enter maximum distance in kilometers. Leave as 0 for unlimited range.
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -312,6 +316,7 @@ function EVDriverPage() {
                             setIsDropdownOpen(false);
                           }
                         }}
+                        aria-label={`Select ${station.name} station at ${station.address}`}
                       >
                         <div className="font-medium text-gray-800 group-hover:text-blue-600 transition-colors">
                           {station.name}
