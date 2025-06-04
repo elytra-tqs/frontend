@@ -19,6 +19,11 @@ function Dashboard() {
             Admin
           </Button>
         </Link>
+        <Link to="/operator">
+          <Button size="lg" variant="default" className="h-24 w-48 text-lg"> 
+            Station Operator
+          </Button>
+        </Link>
       </div>
     </div>
   );

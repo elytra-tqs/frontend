@@ -14,6 +14,7 @@ const routeMapping: Record<string, string> = {
   "evdriver": "EV Driver",
   "admin": "Admin",
   "stations": "Stations",
+  "operator": "Operator",
 };
 
 export function AppBreadcrumb() {

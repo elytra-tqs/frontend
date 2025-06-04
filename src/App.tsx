@@ -3,6 +3,7 @@ import StationsPage from './pages/manage_stations/StationsPage';
 import StationDetails from './pages/manage_stations/StationDetails';
 import Dashboard from './pages/Dashboard';
 import EVDriverPage from './pages/evdriver/EVDriverPage';
+import StationOperatorPage from './pages/station_operator/StationOperatorPage';
 import AdminPage from './pages/admin/AdminPage';
 import AppLayout from './components/layout/AppLayout';
 import { StationsProvider } from "./contexts/StationsContext";
@@ -28,6 +29,7 @@ function App() {
               <Route path="/admin/stations/:stationId" element={<StationDetails />} />
               <Route path="/stations" element={<StationsPage />} />
               <Route path="/stations/:stationId" element={<StationDetails />} />
+              <Route path="/operator" element={<StationOperatorPage />} />
             </Route>
           </Routes>
         </BrowserRouter>
