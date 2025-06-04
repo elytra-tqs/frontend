@@ -74,14 +74,14 @@ function StationOperatorPage() {
     }
   };
 
-  // Time slot management handlers
-  const handleAddTimeSlot = (slot: Omit<TimeSlot, "id">) => {
-    const newSlot: TimeSlot = {
-      ...slot,
-      id: Math.random().toString(36).slice(2, 11), // Temporary ID generation
-    };
-    setTimeSlots([...timeSlots, newSlot]);
-  };
+  // // Time slot management handlers
+  // const handleAddTimeSlot = (slot: Omit<TimeSlot, "id">) => {
+  //   const newSlot: TimeSlot = {
+  //     ...slot,
+  //     id: Math.random().toString(36).slice(2, 11), // Temporary ID generation
+  //   };
+  //   setTimeSlots([...timeSlots, newSlot]);
+  // };
 
   const handleRemoveTimeSlot = (slotId: string) => {
     setTimeSlots(timeSlots.filter(slot => slot.id !== slotId));
@@ -240,7 +240,7 @@ function StationOperatorPage() {
             <TimeSlotManager
               chargers={chargers}
               slots={timeSlots}
-              onAddSlot={handleAddTimeSlot}
+              // onAddSlot={handleAddTimeSlot}
               onRemoveSlot={handleRemoveTimeSlot}
               onToggleAvailability={handleToggleTimeSlotAvailability}
             />
