@@ -76,7 +76,6 @@ function StationOperatorPage() {
 
   // Time slot management handlers
   const handleAddTimeSlot = (slot: Omit<TimeSlot, "id">) => {
-    // TODO: Replace with actual API call
     const newSlot: TimeSlot = {
       ...slot,
       id: Math.random().toString(36).slice(2, 11), // Temporary ID generation
@@ -85,12 +84,10 @@ function StationOperatorPage() {
   };
 
   const handleRemoveTimeSlot = (slotId: string) => {
-    // TODO: Replace with actual API call
     setTimeSlots(timeSlots.filter(slot => slot.id !== slotId));
   };
 
   const handleToggleTimeSlotAvailability = (slotId: string) => {
-    // TODO: Replace with actual API call
     setTimeSlots(timeSlots.map(slot =>
       slot.id === slotId ? { ...slot, isAvailable: !slot.isAvailable } : slot
     ));
