@@ -83,10 +83,22 @@ function EVDriverPage() {
   const [availabilityFilter, setAvailabilityFilter] = useState<string>("all");
   const [chargerTypeFilter, setChargerTypeFilter] = useState<string>("all");
   const allChargerTypes = ["Type1", "Type2", "Type3"]; // Replace with actual charger types
+  const sliderRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
   }, []);
+
+  // Update slider progress CSS variable
+  useEffect(() => {
+    if (sliderRef.current) {
+      const percentage = maxDistance === 0 ? 0 : (maxDistance / 500) * 100;
+      const sliderContainer = sliderRef.current.parentElement;
+      if (sliderContainer) {
+        sliderContainer.style.setProperty('--slider-progress', `${percentage}%`);
+      }
+    }
+  }, [maxDistance]);
 
   function successCallback(position: GeolocationPosition) {
     setUserLocation([position.coords.latitude, position.coords.longitude]);
@@ -281,19 +293,34 @@ function EVDriverPage() {
                     </Select>
                   </div>
                   <div>
-                    <label htmlFor="max-distance-input" className="block text-xs font-semibold mb-1">Max Distance (km)</label>
+                    <label htmlFor="max-distance-slider" className="block text-xs font-semibold mb-2">Max Distance (km)</label>
+                    <div className="slider-container relative mb-2">
                     <input
-                      id="max-distance-input"
-                      type="number"
+                      ref={sliderRef}
+                      id="max-distance-slider"
+                      type="range"
                       min={0}
+                      max={500}
+                      step={1}
                       value={maxDistance}
                       onChange={e => setMaxDistance(Number(e.target.value))}
-                      className="w-full border rounded px-2 py-1 text-sm"
-                      placeholder="0 = unlimited"
+                      className="custom-slider w-full relative z-10"
                       aria-describedby="max-distance-help"
+                      style={{
+                        background: `linear-gradient(to right, black 0%, black ${(maxDistance/500)*100}%, white ${(maxDistance/500)*100}%, white 100%)`,
+                        border: '1px solid black',
+                        borderRadius: '4px',
+                        height: '6px'
+                      }}
                     />
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-gray-500">
+                      <span>0 km</span>
+                      <span className="font-medium text-gray-700">{maxDistance === 0 ? "No limit" : `${maxDistance} km`}</span>
+                      <span>500 km</span>
+                    </div>
                     <div id="max-distance-help" className="sr-only">
-                      Enter maximum distance in kilometers. Leave as 0 for unlimited range.
+                      Enter maximum distance in kilometers. Set to 0 for unlimited range.
                     </div>
                   </div>
                 </div>
