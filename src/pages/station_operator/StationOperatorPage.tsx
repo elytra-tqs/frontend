@@ -1,61 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, AlertCircle } from "lucide-react";
 import { useStations } from "../../contexts/StationsContext";
-import { useChargers, ChargerStatus } from "../../contexts/ChargersContext";
+import { useChargers, ChargerStatus, type Charger } from "../../contexts/ChargersContext";
 import NewChargerForm from "../../components/stations/NewChargerForm";
-
-interface ChargingStation {
-  id: string;
-  name: string;
-  type: string;
-  power: number;
-  status: ChargerStatus;
-  lastMaintenance?: string;
-}
-
-// Dummy data for demonstration
-const dummyChargingStations: ChargingStation[] = [
-  {
-    id: "1",
-    name: "Charger 1",
-    type: "Type 2",
-    power: 22,
-    status: ChargerStatus.AVAILABLE,
-    lastMaintenance: "2024-03-15",
-  },
-  {
-    id: "2",
-    name: "Charger 2",
-    type: "CCS",
-    power: 50,
-    status: ChargerStatus.BEING_USED,
-    lastMaintenance: "2024-03-10",
-  },
-  {
-    id: "3",
-    name: "Charger 3",
-    type: "Type 2",
-    power: 22,
-    status: ChargerStatus.UNDER_MAINTENANCE,
-    lastMaintenance: "2024-03-20",
-  },
-];
 
 function StationOperatorPage() {
   const { stations } = useStations();
-  const { addChargerToStation, updateChargerAvailability } = useChargers();
-  const [chargingStations, setChargingStations] = useState<ChargingStation[]>(dummyChargingStations);
+  const { addChargerToStation, updateChargerAvailability, chargers, fetchChargersByStation } = useChargers();
   const [showNewChargerForm, setShowNewChargerForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Fetch chargers for the station when the component mounts
+    if (stations.length > 0 && stations[0].id) {
+      fetchChargersByStation(stations[0].id);
+    }
+  }, [stations, fetchChargersByStation]);
 
   const handleUpdateStatus = async (stationId: string, newStatus: ChargerStatus) => {
     try {
       await updateChargerAvailability(Number(stationId), newStatus);
-      setChargingStations(chargingStations.map(station => 
-        station.id === stationId ? { ...station, status: newStatus } : station
-      ));
     } catch (err) {
       console.error(err);
       setError("Failed to update charger status. Please try again.");
@@ -140,55 +106,49 @@ function StationOperatorPage() {
               </Card>
             ) : (
               <div className="space-y-4">
-                {chargingStations.length > 0 ? (
+                {chargers.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {chargingStations.map((station) => {
+                    {chargers.map((charger) => {
                       let statusColor = "bg-red-100 text-red-800";
-                      if (station.status === ChargerStatus.AVAILABLE) {
+                      if (charger.status === ChargerStatus.AVAILABLE) {
                         statusColor = "bg-green-100 text-green-800";
-                      } else if (station.status === ChargerStatus.BEING_USED) {
+                      } else if (charger.status === ChargerStatus.BEING_USED) {
                         statusColor = "bg-blue-100 text-blue-800";
-                      } else if (station.status === ChargerStatus.UNDER_MAINTENANCE) {
+                      } else if (charger.status === ChargerStatus.UNDER_MAINTENANCE) {
                         statusColor = "bg-yellow-100 text-yellow-800";
                       }
                       return (
-                        <Card key={station.id} className="hover:shadow-lg transition-shadow">
+                        <Card key={charger.id} className="hover:shadow-lg transition-shadow">
                           <CardContent className="p-6">
-                            <h3 className="text-lg font-semibold mb-2">{station.name}</h3>
+                            <h3 className="text-lg font-semibold mb-2">Charger {charger.id}</h3>
                             <div className="space-y-2">
                               <p className="text-sm">
-                                <span className="font-medium">Type:</span> {station.type}
+                                <span className="font-medium">Type:</span> {charger.type}
                               </p>
                               <p className="text-sm">
-                                <span className="font-medium">Power:</span> {station.power} kW
+                                <span className="font-medium">Power:</span> {charger.power} kW
                               </p>
                               <p className="text-sm">
                                 <span className="font-medium">Status:</span>{" "}
                                 <span className={`inline-block px-2 py-1 rounded-full text-xs ${statusColor}`}>
-                                  {station.status.replace(/_/g, " ").toLowerCase()}
+                                  {charger.status.replace(/_/g, " ").toLowerCase()}
                                 </span>
                               </p>
-                              {station.lastMaintenance && (
-                                <p className="text-sm">
-                                  <span className="font-medium">Last Maintenance:</span>{" "}
-                                  {station.lastMaintenance}
-                                </p>
-                              )}
                             </div>
                             <div className="mt-4 flex gap-2">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleUpdateStatus(station.id, ChargerStatus.UNDER_MAINTENANCE)}
-                                disabled={station.status === ChargerStatus.UNDER_MAINTENANCE}
+                                onClick={() => handleUpdateStatus(charger.id.toString(), ChargerStatus.UNDER_MAINTENANCE)}
+                                disabled={charger.status === ChargerStatus.UNDER_MAINTENANCE}
                               >
                                 Set Maintenance
                               </Button>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleUpdateStatus(station.id, ChargerStatus.AVAILABLE)}
-                                disabled={station.status === ChargerStatus.AVAILABLE}
+                                onClick={() => handleUpdateStatus(charger.id.toString(), ChargerStatus.AVAILABLE)}
+                                disabled={charger.status === ChargerStatus.AVAILABLE}
                               >
                                 Set Available
                               </Button>
