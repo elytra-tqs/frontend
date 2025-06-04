@@ -17,14 +17,14 @@ export interface TimeSlot {
 }
 
 interface TimeSlotManagerProps {
-  chargers: Charger[];
-  slots: TimeSlot[];
-  onAddSlot: (slot: Omit<TimeSlot, "id">) => void;
-  onRemoveSlot: (slotId: string) => void;
-  onToggleAvailability: (slotId: string) => void;
+  readonly chargers: readonly Charger[];
+  readonly slots: readonly TimeSlot[];
+  readonly onAddSlot: (slot: Omit<TimeSlot, "id">) => void;
+  readonly onRemoveSlot: (slotId: string) => void;
+  readonly onToggleAvailability: (slotId: string) => void;
 }
 
-export function TimeSlotManager({ chargers, slots, onAddSlot, onRemoveSlot, onToggleAvailability }: TimeSlotManagerProps) {
+export function TimeSlotManager({ chargers, slots, onAddSlot, onRemoveSlot, onToggleAvailability }: Readonly<TimeSlotManagerProps>) {
   const [newStartTime, setNewStartTime] = useState("09:00");
   const [newEndTime, setNewEndTime] = useState("10:00");
   const [selectedChargerId, setSelectedChargerId] = useState<string>("");

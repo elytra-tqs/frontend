@@ -31,7 +31,7 @@ function StationOperatorPage() {
         // Morning slots (8:00-12:00)
         for (let i = 0; i < 5; i++) {
           defaultSlots.push({
-            id: Math.random().toString(36).substr(2, 9),
+            id: Math.random().toString(36).slice(2, 11),
             chargerId: charger.id,
             startTime: `${8 + i}:00`,
             endTime: `${9 + i}:00`,
@@ -42,7 +42,7 @@ function StationOperatorPage() {
         // Afternoon slots (13:00-17:00)
         for (let i = 0; i < 5; i++) {
           defaultSlots.push({
-            id: Math.random().toString(36).substr(2, 9),
+            id: Math.random().toString(36).slice(2, 11),
             chargerId: charger.id,
             startTime: `${13 + i}:00`,
             endTime: `${14 + i}:00`,
@@ -79,7 +79,7 @@ function StationOperatorPage() {
     // TODO: Replace with actual API call
     const newSlot: TimeSlot = {
       ...slot,
-      id: Math.random().toString(36).substr(2, 9), // Temporary ID generation
+      id: Math.random().toString(36).slice(2, 11), // Temporary ID generation
     };
     setTimeSlots([...timeSlots, newSlot]);
   };
