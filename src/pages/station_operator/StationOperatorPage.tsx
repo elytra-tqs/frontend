@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, AlertCircle } from "lucide-react";
 import { useStations } from "../../contexts/StationsContext";
-import { useChargers, ChargerStatus, type Charger } from "../../contexts/ChargersContext";
+import { useChargers, ChargerStatus } from "../../contexts/ChargersContext";
 import NewChargerForm from "../../components/stations/NewChargerForm";
 
 function StationOperatorPage() {
