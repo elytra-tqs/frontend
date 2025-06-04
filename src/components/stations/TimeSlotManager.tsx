@@ -22,7 +22,7 @@ interface TimeSlotManagerProps {
   readonly onToggleAvailability: (slotId: string) => void;
 }
 
-export function TimeSlotManager({ chargers, slots, onAddSlot, onRemoveSlot, onToggleAvailability }: Readonly<TimeSlotManagerProps>) {
+export function TimeSlotManager({ chargers, slots, onRemoveSlot, onToggleAvailability }: Readonly<TimeSlotManagerProps>) {
   return (
     <div className="space-y-6">
       <Accordion type="single" collapsible className="w-full">
