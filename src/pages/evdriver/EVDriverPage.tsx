@@ -80,8 +80,8 @@ function EVDriverPage() {
   const { stations: rawStations, loading: stationsLoading, error: stationsError } = useStations();
   const stations = rawStations as Station[];
   const [maxDistance, setMaxDistance] = useState<number>(0); // 0 means no limit
-  const [availabilityFilter, setAvailabilityFilter] = useState<"all" | "AVAILABLE" | "BEING_USED" | "UNDER_MAINTENANCE" | "OUT_OF_SERVICE">("all");
-  const [chargerTypeFilter, setChargerTypeFilter] = useState<"all" | string>("all");
+  const [availabilityFilter, setAvailabilityFilter] = useState<string>("all");
+  const [chargerTypeFilter, setChargerTypeFilter] = useState<string>("all");
   const allChargerTypes = ["Type1", "Type2", "Type3"]; // Replace with actual charger types
 
   useEffect(() => {
@@ -252,9 +252,9 @@ function EVDriverPage() {
               <CardContent className="p-3 -mt-5 -mb-5">
                 <div className="space-y-2 mb-4">
                   <div>
-                    <label className="block text-xs font-semibold mb-1">Availability</label>
-                    <Select value={availabilityFilter} onValueChange={value => setAvailabilityFilter(value as typeof availabilityFilter)}>
-                      <SelectTrigger className="w-full">
+                    <label id="availability-label" className="block text-xs font-semibold mb-1">Availability</label>
+                    <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+                      <SelectTrigger className="w-full" aria-labelledby="availability-label">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -267,9 +267,9 @@ function EVDriverPage() {
                     </Select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold mb-1">Charger Type</label>
-                    <Select value={chargerTypeFilter} onValueChange={value => setChargerTypeFilter(value as typeof chargerTypeFilter)}>
-                      <SelectTrigger className="w-full">
+                    <label id="charger-type-label" className="block text-xs font-semibold mb-1">Charger Type</label>
+                    <Select value={chargerTypeFilter} onValueChange={setChargerTypeFilter}>
+                      <SelectTrigger className="w-full" aria-labelledby="charger-type-label">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -281,8 +281,9 @@ function EVDriverPage() {
                     </Select>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold mb-1">Max Distance (km)</label>
+                    <label htmlFor="max-distance-input" className="block text-xs font-semibold mb-1">Max Distance (km)</label>
                     <input
+                      id="max-distance-input"
                       type="number"
                       min={0}
                       value={maxDistance}
