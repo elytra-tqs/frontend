@@ -135,3 +135,49 @@
   }
 }
 
+.custom-slider {
+  appearance: none;
+  height: 6px;
+  border-radius: 4px;
+  outline: none;
+  /* The border and background are set inline for dynamic progress */
+}
+.custom-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  border: 3px solid black;
+  cursor: pointer;
+  margin-top: -6px;
+  box-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+.custom-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  background: transparent;
+}
+.custom-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  border: 3px solid black;
+  cursor: pointer;
+}
+.custom-slider::-moz-range-track {
+  height: 6px;
+  background: transparent;
+}
+.custom-slider::-ms-thumb {
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  border: 3px solid black;
+  cursor: pointer;
+}
+.custom-slider::-ms-fill-lower,
+.custom-slider::-ms-fill-upper {
+  background: transparent;
+}

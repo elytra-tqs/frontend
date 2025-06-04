@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useStations } from "../../contexts/StationsContext";
 import { ChargerStatus } from "../../contexts/ChargersContext";
 import { StationPopup } from "@/components/StationPopup";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const mapStyles = `
   .leaflet-top.leaflet-left .leaflet-control-zoom {
@@ -76,11 +77,28 @@ function EVDriverPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const mapRef = useRef<L.Map | null>(null);
-  const { stations, loading: stationsLoading, error: stationsError } = useStations();
+  const { stations: rawStations, loading: stationsLoading, error: stationsError } = useStations();
+  const stations = rawStations as Station[];
+  const [maxDistance, setMaxDistance] = useState<number>(0); // 0 means no limit
+  const [availabilityFilter, setAvailabilityFilter] = useState<string>("all");
+  const [chargerTypeFilter, setChargerTypeFilter] = useState<string>("all");
+  const allChargerTypes = ["Type1", "Type2", "Type3"]; // Replace with actual charger types
+  const sliderRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
   }, []);
+
+  // Update slider progress CSS variable
+  useEffect(() => {
+    if (sliderRef.current) {
+      const percentage = maxDistance === 0 ? 0 : (maxDistance / 500) * 100;
+      const sliderContainer = sliderRef.current.parentElement;
+      if (sliderContainer) {
+        sliderContainer.style.setProperty('--slider-progress', `${percentage}%`);
+      }
+    }
+  }, [maxDistance]);
 
   function successCallback(position: GeolocationPosition) {
     setUserLocation([position.coords.latitude, position.coords.longitude]);
@@ -131,6 +149,24 @@ function EVDriverPage() {
       )
     : stations;
 
+  // Filtering logic
+  const filteredStations = sortedStations.filter((station) => {
+    // Filter by charger type
+    const hasType =
+      chargerTypeFilter === "all" ||
+      (station.chargers ?? []).some(charger => charger.type === chargerTypeFilter);
+    // Filter by availability
+    const hasAvailability =
+      availabilityFilter === "all" ||
+      (station.chargers ?? []).some(charger => charger.status === availabilityFilter);
+    // Filter by proximity
+    const distance = userLocation && station.latitude && station.longitude
+      ? getDistance(userLocation, [station.latitude, station.longitude])
+      : 0;
+    const withinDistance = maxDistance === 0 || distance <= maxDistance;
+    return hasType && hasAvailability && withinDistance;
+  });
+
   const centerOnUser = () => {
     if (userLocation && mapRef.current) {
       mapRef.current.flyTo(userLocation, 15, {
@@ -175,7 +211,7 @@ function EVDriverPage() {
           <Marker position={userLocation} icon={userIcon}>
             <Popup>Your Location</Popup>
           </Marker>
-          {stations.map((station) => (
+          {filteredStations.map((station) => (
             station.latitude && station.longitude && (
               <Marker
                 key={station.id}
@@ -224,43 +260,110 @@ function EVDriverPage() {
           </Button>
 
           {isDropdownOpen && (
-            <Card className="absolute top-full right-0 mt-2 w-80 max-h-96 overflow-y-auto bg-white/95 backdrop-blur-sm border shadow-2xl z-[1002]">
+            <Card className="absolute top-full right-0 mt-2 w-80 max-h-[32rem] overflow-y-auto bg-white/95 backdrop-blur-sm border shadow-2xl z-[1002]">
               <CardContent className="p-3 -mt-5 -mb-5">
-                <div className="space-y-2">
-                  {sortedStations.map((station) => (
-                    <button
-                      key={station.id}
-                      className="w-full text-left flex flex-col p-3 bg-white/80 rounded-lg border border-gray-200 hover:bg-white/90 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      onClick={() => {
-                        setSelectedStation(station);
-                        setIsDropdownOpen(false);
+                <div className="space-y-2 mb-4">
+                  <div>
+                    <label htmlFor="availability-filter" className="block text-xs font-semibold mb-1">Availability</label>
+                    <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+                      <SelectTrigger id="availability-filter" className="w-full" aria-labelledby="availability-filter">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="AVAILABLE">Available</SelectItem>
+                        <SelectItem value="BEING_USED">In Use</SelectItem>
+                        <SelectItem value="UNDER_MAINTENANCE">Under Maintenance</SelectItem>
+                        <SelectItem value="OUT_OF_SERVICE">Out of Service</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label htmlFor="charger-type-filter" className="block text-xs font-semibold mb-1">Charger Type</label>
+                    <Select value={chargerTypeFilter} onValueChange={setChargerTypeFilter}>
+                      <SelectTrigger id="charger-type-filter" className="w-full" aria-labelledby="charger-type-filter">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        {allChargerTypes.map((type) => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label htmlFor="max-distance-slider" className="block text-xs font-semibold mb-2">Max Distance (km)</label>
+                    <div className="slider-container relative mb-2">
+                    <input
+                      ref={sliderRef}
+                      id="max-distance-slider"
+                      type="range"
+                      min={0}
+                      max={500}
+                      step={1}
+                      value={maxDistance}
+                      onChange={e => setMaxDistance(Number(e.target.value))}
+                      className="custom-slider w-full relative z-10"
+                      aria-describedby="max-distance-help"
+                      style={{
+                        background: `linear-gradient(to right, black 0%, black ${(maxDistance/500)*100}%, white ${(maxDistance/500)*100}%, white 100%)`,
+                        border: '1px solid black',
+                        borderRadius: '4px',
+                        height: '6px'
                       }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
+                    />
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-gray-500">
+                      <span>0 km</span>
+                      <span className="font-medium text-gray-700">{maxDistance === 0 ? "No limit" : `${maxDistance} km`}</span>
+                      <span>500 km</span>
+                    </div>
+                    <div id="max-distance-help" className="sr-only">
+                      Enter maximum distance in kilometers. Set to 0 for unlimited range.
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {filteredStations.length === 0 ? (
+                    <div className="text-center text-gray-500 py-8">No results found.</div>
+                  ) : (
+                    filteredStations.map((station) => (
+                      <button
+                        key={station.id}
+                        className="w-full text-left flex flex-col p-3 bg-white/80 rounded-lg border border-gray-200 hover:bg-white/90 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        onClick={() => {
                           setSelectedStation(station);
                           setIsDropdownOpen(false);
-                        }
-                      }}
-                    >
-                      <div className="font-medium text-gray-800 group-hover:text-blue-600 transition-colors">
-                        {station.name}
-                      </div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        {station.address}
-                      </div>
-                      {userLocation && station.latitude && station.longitude && (
-                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                          <Navigation className="w-3 h-3" />
-                          {getDistance(userLocation, [
-                            station.latitude,
-                            station.longitude,
-                          ]).toFixed(2)}{" "}
-                          km away
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setSelectedStation(station);
+                            setIsDropdownOpen(false);
+                          }
+                        }}
+                        aria-label={`Select ${station.name} station at ${station.address}`}
+                      >
+                        <div className="font-medium text-gray-800 group-hover:text-blue-600 transition-colors">
+                          {station.name}
                         </div>
-                      )}
-                    </button>
-                  ))}
+                        <div className="text-sm text-gray-600 mt-1">
+                          {station.address}
+                        </div>
+                        {userLocation && station.latitude && station.longitude && (
+                          <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                            <Navigation className="w-3 h-3" />
+                            {getDistance(userLocation, [
+                              station.latitude,
+                              station.longitude,
+                            ]).toFixed(2)}{" "}
+                            km away
+                          </div>
+                        )}
+                      </button>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
