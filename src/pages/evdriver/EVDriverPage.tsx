@@ -142,11 +142,11 @@ function EVDriverPage() {
     // Filter by charger type
     const hasType =
       chargerTypeFilter === "all" ||
-      ((station.chargers ?? []) as Charger[]).some((charger: Charger) => charger.type === chargerTypeFilter);
+      (station.chargers ?? []).some(charger => charger.type === chargerTypeFilter);
     // Filter by availability
     const hasAvailability =
       availabilityFilter === "all" ||
-      ((station.chargers ?? []) as Charger[]).some((charger: Charger) => charger.status === availabilityFilter);
+      (station.chargers ?? []).some(charger => charger.status === availabilityFilter);
     // Filter by proximity
     const distance = userLocation && station.latitude && station.longitude
       ? getDistance(userLocation, [station.latitude, station.longitude])
@@ -254,7 +254,7 @@ function EVDriverPage() {
                   <div>
                     <label id="availability-label" className="block text-xs font-semibold mb-1">Availability</label>
                     <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
-                      <SelectTrigger className="w-full" aria-labelledby="availability-label">
+                      <SelectTrigger className="w-full" aria-label="Availability">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -269,7 +269,7 @@ function EVDriverPage() {
                   <div>
                     <label id="charger-type-label" className="block text-xs font-semibold mb-1">Charger Type</label>
                     <Select value={chargerTypeFilter} onValueChange={setChargerTypeFilter}>
-                      <SelectTrigger className="w-full" aria-labelledby="charger-type-label">
+                      <SelectTrigger className="w-full" aria-label="Charger Type">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
