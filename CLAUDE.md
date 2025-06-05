@@ -69,8 +69,10 @@ src/
 │   ├── navigation/     # Navigation components (breadcrumb, etc.)
 │   └── stations/       # Station-specific components
 ├── contexts/           # Global state providers
+│   ├── AuthContext.tsx      # Authentication state management
 │   ├── StationsContext.tsx  # Station data management
-│   └── ChargersContext.tsx  # Charger data management
+│   ├── ChargersContext.tsx  # Charger data management
+│   └── CarsContext.tsx      # Cars data management
 ├── pages/              # Route-based page components
 │   ├── Dashboard.tsx        # Public dashboard
 │   ├── SignIn.tsx          # Authentication
@@ -117,3 +119,21 @@ src/
 - **Hot Module Replacement**: Enabled for rapid development
 - **ESLint**: Configured for TypeScript and React best practices
 - **SonarCloud**: Code quality analysis (project key: `elytra-tqs_frontend`)
+
+### Additional Context
+
+1. **Protected Routes**: All routes except `/`, `/signin`, and `/signup` require authentication. The `ProtectedRoute` component handles this logic.
+
+2. **Role-Based Features**:
+   - **ADMIN**: Can manage all stations and users
+   - **STATION_OPERATOR**: Can manage their assigned stations
+   - **EV_DRIVER**: Can book charging slots and manage their vehicles
+
+3. **API Error Handling**: Axios interceptors handle authentication errors globally, redirecting to login when tokens expire.
+
+4. **Form Validation**: All forms use Zod schemas for runtime validation, ensuring type safety between frontend and backend.
+
+5. **Component Conventions**: 
+   - Page components are in `/pages` directory
+   - Reusable components in `/components` directory
+   - shadcn/ui components should not be modified directly; extend them instead

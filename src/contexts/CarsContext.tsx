@@ -13,7 +13,7 @@ const carsApiClient = axios.create({
 
 // Add auth token to requests if available
 carsApiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -45,7 +45,7 @@ interface CarsContextType {
   error: string | null;
   fetchCars: () => Promise<void>;
   fetchCarsByDriver: (driverId: string) => Promise<void>;
-  addCar: (carData: CarFormData) => Promise<Car>;
+  addCar: (carData: CarFormData, driverId?: string) => Promise<Car>;
   updateCar: (id: string, carData: Partial<CarFormData>) => Promise<Car>;
   deleteCar: (id: string) => Promise<void>;
 }
@@ -75,7 +75,7 @@ export const CarsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     setError(null);
     try {
-      const response = await carsApiClient.get<Car[]>(`/evdrivers/${driverId}/cars`);
+      const response = await carsApiClient.get<Car[]>(`/cars/driver/${driverId}`);
       setCars(response.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch driver cars');
@@ -85,16 +85,58 @@ export const CarsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-  const addCar = useCallback(async (carData: CarFormData): Promise<Car> => {
+  const addCar = useCallback(async (carData: CarFormData, driverId?: string): Promise<Car> => {
     setLoading(true);
     setError(null);
     try {
-      const response = await carsApiClient.post<Car>('/cars', carData);
+      let endpoint = '/cars';
+      
+      if (driverId) {
+        // If driverId is explicitly provided, use it
+        endpoint = `/cars/driver/${driverId}`;
+      } else {
+        // First, get the current user info to find the driver ID
+        try {
+          const token = localStorage.getItem('token');
+          console.log('Token exists:', !!token);
+          
+          if (token) {
+            const meResponse = await carsApiClient.get('/auth/me');
+            console.log('User data from /auth/me:', meResponse.data);
+            
+            if (meResponse.data && meResponse.data.userId) {
+
+              const oldEndpoint = `/drivers/user/${meResponse.data.userId}`;
+              const response = await carsApiClient.get(oldEndpoint);
+
+              console.log(response.data.id)
+
+              // Assuming the user ID is the same as driver ID for EV_DRIVER users
+              endpoint = `/cars/driver/${response.data.id}`;
+              console.log('Using endpoint:', endpoint);
+            }
+          }
+        } catch (error) {
+          console.error('Could not fetch user info:', error);
+          console.error('Error details:', error.response?.data);
+        }
+      }
+      
+      console.log('Final endpoint:', endpoint);
+      console.log('Car data being sent:', carData);
+
+
+      const response = await carsApiClient.post<Car>(endpoint, carData);
       const newCar = response.data;
+      console.log('New car created:', newCar);
       setCars((prevCars) => [...prevCars, newCar]);
       return newCar;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to add car';
+    } catch (err: any) {
+      console.error('Error creating car:', err);
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to add car';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {

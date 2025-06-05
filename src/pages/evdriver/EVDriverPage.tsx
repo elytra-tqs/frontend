@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
 import L from "leaflet";
-import { ChevronDown, MapPin, Navigation, Car } from "lucide-react";
+import { ChevronDown, MapPin, Navigation, Car, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useStations } from "../../contexts/StationsContext";
@@ -9,6 +9,16 @@ import { ChargerStatus } from "../../contexts/ChargersContext";
 import { StationPopup } from "@/components/StationPopup";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { useCars } from "../../contexts/CarsContext";
+import { useAuth } from "../../contexts/AuthContext";
+import axios from "axios";
 
 const mapStyles = `
   .leaflet-top.leaflet-left .leaflet-control-zoom {
@@ -86,10 +96,40 @@ function EVDriverPage() {
   const allChargerTypes = ["Type1", "Type2", "Type3"]; // Replace with actual charger types
   const sliderRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { cars, loading: carsLoading, fetchCarsByDriver } = useCars();
+  const { user } = useAuth();
+  const [driverId, setDriverId] = useState<string | null>(null);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
   }, []);
+
+  // Fetch driver ID and cars when user is available
+  useEffect(() => {
+    const fetchDriverData = async () => {
+      if (user?.id) {
+        try {
+          const apiClient = axios.create({
+            baseURL: 'http://localhost/api/v1',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+          });
+          
+          const response = await apiClient.get(`/drivers/user/${user.id}`);
+          if (response.data?.id) {
+            setDriverId(response.data.id.toString());
+            // Fetch cars for this driver using the new endpoint
+            await fetchCarsByDriver(response.data.id.toString());
+          }
+        } catch (error) {
+          console.error('Error fetching driver data:', error);
+        }
+      }
+    };
+
+    fetchDriverData();
+  }, [user, fetchCarsByDriver]);
 
   // Update slider progress CSS variable
   useEffect(() => {
@@ -236,15 +276,59 @@ function EVDriverPage() {
       )}
 
       <div className="absolute top-4 right-4 z-[1001] flex gap-2 pointer-events-auto">
-        <Button
-          onClick={() => navigate("/evdriver/add-car")}
-          variant="outline"
-          className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
-          title="Manage cars"
-        >
-          <Car className="w-4 h-4" />
-          <span>Manage Cars</span>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
+              title="Manage cars"
+            >
+              <Car className="w-4 h-4" />
+              <span>Manage Cars</span>
+              <ChevronDown className="w-4 h-4 ml-1" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuItem 
+              onClick={() => navigate("/evdriver/add-car")}
+              className="cursor-pointer"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              <span>Add New Car</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {carsLoading ? (
+              <DropdownMenuItem disabled>
+                <span className="text-sm text-gray-500">Loading cars...</span>
+              </DropdownMenuItem>
+            ) : cars.length === 0 ? (
+              <DropdownMenuItem disabled>
+                <span className="text-sm text-gray-500">You have no cars yet</span>
+              </DropdownMenuItem>
+            ) : (
+              <>
+                <div className="px-2 py-1.5 text-sm font-semibold text-gray-700">
+                  Your Cars
+                </div>
+                {cars.map((car) => (
+                  <DropdownMenuItem 
+                    key={car.id}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      // You can add navigation to car details or management page here
+                      console.log('Selected car:', car);
+                    }}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">{car.model}</span>
+                      <span className="text-xs text-gray-500">{car.licensePlate}</span>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Button
           onClick={centerOnUser}
