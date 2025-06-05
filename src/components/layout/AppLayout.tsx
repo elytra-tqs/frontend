@@ -2,19 +2,25 @@ import { Outlet, Link } from "react-router-dom";
 import AppBreadcrumb from "../navigation/AppBreadcrumb";
 import { Sidebar, SidebarProvider, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { Home, Settings, MapPin } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 function SidebarHeaderContent() {
   const { state } = useSidebar();
+
   
   return (
-    <div className="flex items-center gap-2">
-      <img src="/elytra.png" alt="Elytra Logo" className="w-6 h-6 -ml-1" />
-      {state === "expanded" && <h2 className="text-lg font-semibold">Elytra</h2>}
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <img src="/elytra.png" alt="Elytra Logo" className="w-6 h-6 -ml-1" />
+        {state === "expanded" && <h2 className="text-lg font-semibold">Elytra</h2>}
+      </div>
     </div>
   );
 }
 
 export function AppLayout() {
+  const { user, logout } = useAuth();
+
   return (
     <SidebarProvider>
       <div className="h-screen bg-background flex w-full">
@@ -44,6 +50,21 @@ export function AppLayout() {
               </SidebarMenuButton>
             </SidebarMenu>
           </SidebarContent>
+          {user && (
+            <div className="mt-auto p-4 flex flex-col items-center border-t border-gray-200">
+              <div className="mb-2 text-center">
+                <div className="font-semibold text-base">{user.firstName} {user.lastName}</div>
+                <div className="text-xs text-gray-500">{user.email}</div>
+                <div className="text-xs capitalize text-gray-400">{user.userType.replace('_', ' ').toLowerCase()}</div>
+              </div>
+              <button
+                onClick={logout}
+                className="w-full px-4 py-2 rounded bg-green-600 text-white font-bold hover:bg-green-700 transition"
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </Sidebar>
         <div className="flex-1 flex flex-col">
           <div className="relative z-[1002] pointer-events-none">
