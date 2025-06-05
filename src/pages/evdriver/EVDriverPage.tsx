@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
-import { ChevronDown, MapPin, Navigation, Car, Plus } from "lucide-react";
+import { ChevronDown, MapPin, Navigation, Car, Plus, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useStations } from "../../contexts/StationsContext";
@@ -20,6 +20,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import axios from "axios";
 import { userIcon, stationIcon } from "@/lib/mapIcons";
 import { getCurrentPosition, handleGeolocationError, getDistance } from "@/lib/geolocation";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { BookingsList } from "@/components/BookingsList";
 
 const mapStyles = `
   .leaflet-top.leaflet-left .leaflet-control-zoom {
@@ -66,6 +68,7 @@ function EVDriverPage() {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+  const [isBookingsDialogOpen, setIsBookingsDialogOpen] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const { stations: rawStations, loading: stationsLoading, error: stationsError } = useStations();
   const stations = rawStations as Station[];
@@ -318,6 +321,16 @@ function EVDriverPage() {
           <span>My Location</span>
         </Button>
 
+        <Button
+          onClick={() => setIsBookingsDialogOpen(true)}
+          variant="outline"
+          className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
+          title="View my bookings"
+        >
+          <Calendar className="w-4 h-4" />
+          <span>My Bookings</span>
+        </Button>
+
         <div className="relative">
           <Button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -458,6 +471,20 @@ function EVDriverPage() {
           }}
         />
       )}
+
+      <Dialog open={isBookingsDialogOpen} onOpenChange={setIsBookingsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>My Bookings</DialogTitle>
+            <DialogDescription>
+              View and manage your charging session bookings
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <BookingsList />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TimeSlotList } from "@/components/TimeSlotList";
 import { useChargers, ChargerStatus } from "../contexts/ChargersContext";
+import { useBookings } from "../contexts/BookingsContext";
+import { BookingDialog } from "./BookingDialog";
 
 interface Charger {
   id: number;
@@ -30,25 +29,13 @@ interface Station {
   chargers?: Charger[];
 }
 
-interface TimeSlot {
-  time: string;
-  isOccupied: boolean;
-}
 
 export function StationPopup({ station }: Readonly<{ station: Station }>) {
   const { loading: chargersLoading, fetchChargersByStation } = useChargers();
+  const { fetchBookingsByCharger } = useBookings();
   const [selectedCharger, setSelectedCharger] = useState<Charger | null>(null);
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
-
-  const morningSlots: TimeSlot[] = Array.from({ length: 5 }, (_, i) => ({
-    time: `${8 + i}:00`,
-    isOccupied: Math.random() > 0.7,
-  }));
-
-  const afternoonSlots: TimeSlot[] = Array.from({ length: 5 }, (_, i) => ({
-    time: `${13 + i}:00`,
-    isOccupied: Math.random() > 0.7,
-  }));
+  const [chargerBookings, setChargerBookings] = useState<Array<{startTime: string; endTime: string}>>([]);
 
   useEffect(() => {
     if (station.id) {
@@ -86,9 +73,16 @@ export function StationPopup({ station }: Readonly<{ station: Station }>) {
     }
   };
 
-  const handleBookSlot = (time: string) => {
-    console.log(`Booking charger ${selectedCharger?.id} for ${time}`);
-    setIsBookingDialogOpen(false);
+  const handleOpenBookingDialog = async (charger: Charger) => {
+    setSelectedCharger(charger);
+    try {
+      const bookings = await fetchBookingsByCharger(charger.id);
+      setChargerBookings(bookings);
+    } catch (error) {
+      console.error("Failed to fetch charger bookings:", error);
+      setChargerBookings([]);
+    }
+    setIsBookingDialogOpen(true);
   };
 
   if (chargersLoading) {
@@ -129,10 +123,7 @@ export function StationPopup({ station }: Readonly<{ station: Station }>) {
               <Button
                 className="w-full -mt-5"
                 disabled={charger.status !== ChargerStatus.AVAILABLE}
-                onClick={() => {
-                  setSelectedCharger(charger);
-                  setIsBookingDialogOpen(true);
-                }}
+                onClick={() => handleOpenBookingDialog(charger)}
               >
                 {charger.status === ChargerStatus.AVAILABLE ? "Book Now" : "Unavailable"}
               </Button>
@@ -141,33 +132,23 @@ export function StationPopup({ station }: Readonly<{ station: Station }>) {
         </div>
       </ScrollArea>
 
-      <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>
-              Book Charger {selectedCharger?.id} - {selectedCharger?.type}
-            </DialogTitle>
-          </DialogHeader>
-          <Tabs defaultValue="morning" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="morning">Morning</TabsTrigger>
-              <TabsTrigger value="afternoon">Afternoon</TabsTrigger>
-            </TabsList>
-            <TabsContent value="morning">
-              <TimeSlotList
-                slots={morningSlots}
-                onBook={handleBookSlot}
-              />
-            </TabsContent>
-            <TabsContent value="afternoon">
-              <TimeSlotList
-                slots={afternoonSlots}
-                onBook={handleBookSlot}
-              />
-            </TabsContent>
-          </Tabs>
-        </DialogContent>
-      </Dialog>
+      {selectedCharger && (
+        <BookingDialog
+          isOpen={isBookingDialogOpen}
+          onClose={() => {
+            setIsBookingDialogOpen(false);
+            setSelectedCharger(null);
+            setChargerBookings([]);
+          }}
+          chargerId={selectedCharger.id}
+          chargerInfo={{
+            type: selectedCharger.type,
+            power: selectedCharger.power,
+            stationName: station.name
+          }}
+          existingBookings={chargerBookings}
+        />
+      )}
     </div>
   );
 } 
