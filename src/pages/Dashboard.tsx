@@ -1,32 +1,70 @@
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "../components/ui/button";
+import { useNavigate } from "react-router-dom";
 
-function Dashboard() {
+export default function Dashboard() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const getDashboardContent = () => {
+    switch (user?.userType) {
+      case 'EV_DRIVER':
+        return {
+          title: "EV Driver Dashboard",
+          description: "Manage your charging sessions and vehicle information",
+          actions: [
+            { label: "Find Charging Stations", path: "/evdriver" },
+            { label: "Manage My Cars", path: "/evdriver/add-car" },
+          ]
+        };
+      case 'STATION_OPERATOR':
+        return {
+          title: "Station Operator Dashboard",
+          description: "Monitor and manage your charging stations",
+          actions: [
+            { label: "View Stations", path: "/stations" },
+            { label: "Station Overview", path: "/operator" },
+          ]
+        };
+      case 'ADMIN':
+        return {
+          title: "Admin Dashboard",
+          description: "System-wide management and monitoring",
+          actions: [
+            { label: "Manage Stations", path: "/admin/stations" },
+            { label: "Admin Overview", path: "/admin" },
+          ]
+        };
+      default:
+        return {
+          title: "Welcome",
+          description: "Please select your role to continue",
+          actions: []
+        };
+    }
+  };
+
+  const content = getDashboardContent();
+
   return (
-    <div className="container mx-auto flex flex-col items-center justify-center min-h-screen p-4">
-      <h1 className="text-4xl font-bold mb-8">Welcome to Elytra</h1>
-      <p className="text-xl mb-12">Please select your interface:</p>
-
-      <div className="flex gap-8">
-        <Link to="/evdriver">
-          <Button size="lg" variant="default" className="h-24 w-48 text-lg">
-            EV Driver
-          </Button>
-        </Link>
-
-        <Link to="/admin">
-          <Button size="lg" variant="default" className="h-24 w-48 text-lg">
-            Admin
-          </Button>
-        </Link>
-        <Link to="/operator">
-          <Button size="lg" variant="default" className="h-24 w-48 text-lg"> 
-            Station Operator
-          </Button>
-        </Link>
+    <div className="container mx-auto p-6">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-2">{content.title}</h1>
+        <p className="text-gray-600 mb-8">{content.description}</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {content.actions.map((action, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              className="h-24 text-lg"
+              onClick={() => navigate(action.path)}
+            >
+              {action.label}
+            </Button>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
-
-export default Dashboard;
