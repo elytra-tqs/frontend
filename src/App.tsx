@@ -13,6 +13,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import { AddCarPage } from "./pages/evdriver/AddCarPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { StationOperatorProvider } from './contexts/StationOperatorContext';
 
 function App() {
   return (
@@ -20,94 +21,96 @@ function App() {
       <AuthProvider>
         <StationsProvider>
           <ChargersProvider>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/signin" element={<SignIn />} />
-              <Route path="/signup" element={<SignUp />} />
-              
-              {/* Protected routes with layout */}
-              <Route element={<AppLayout />}>
-                {/* EV Driver routes */}
-                <Route
-                  path="/evdriver"
-                  element={
-                    <ProtectedRoute allowedUserTypes={["EV_DRIVER"]}>
-                      <EVDriverPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/evdriver/add-car"
-                  element={
-                    <ProtectedRoute allowedUserTypes={["EV_DRIVER"]}>
-                      <AddCarPage />
-                    </ProtectedRoute>
-                  }
-                />
+            <StationOperatorProvider>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/signin" element={<SignIn />} />
+                <Route path="/signup" element={<SignUp />} />
+                
+                {/* Protected routes with layout */}
+                <Route element={<AppLayout />}>
+                  {/* EV Driver routes */}
+                  <Route
+                    path="/evdriver"
+                    element={
+                      <ProtectedRoute allowedUserTypes={["EV_DRIVER"]}>
+                        <EVDriverPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/evdriver/add-car"
+                    element={
+                      <ProtectedRoute allowedUserTypes={["EV_DRIVER"]}>
+                        <AddCarPage />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                {/* Admin routes */}
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute allowedUserTypes={["ADMIN"]}>
-                      <AdminPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/stations"
-                  element={
-                    <ProtectedRoute allowedUserTypes={["ADMIN"]}>
-                      <StationsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/stations/:stationId"
-                  element={
-                    <ProtectedRoute allowedUserTypes={["ADMIN"]}>
-                      <StationDetails />
-                    </ProtectedRoute>
-                  }
-                />
+                  {/* Admin routes */}
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute allowedUserTypes={["ADMIN"]}>
+                        <AdminPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/stations"
+                    element={
+                      <ProtectedRoute allowedUserTypes={["ADMIN"]}>
+                        <StationsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/stations/:stationId"
+                    element={
+                      <ProtectedRoute allowedUserTypes={["ADMIN"]}>
+                        <StationDetails />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                {/* Station Operator routes */}
-                <Route
-                  path="/operator"
-                  element={
-                    <ProtectedRoute allowedUserTypes={["STATION_OPERATOR"]}>
-                      <StationOperatorPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/stations"
-                  element={
-                    <ProtectedRoute allowedUserTypes={["STATION_OPERATOR"]}>
-                      <StationsPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/stations/:stationId"
-                  element={
-                    <ProtectedRoute allowedUserTypes={["STATION_OPERATOR"]}>
-                      <StationDetails />
-                    </ProtectedRoute>
-                  }
-                />
+                  {/* Station Operator routes */}
+                  <Route
+                    path="/operator"
+                    element={
+                      <ProtectedRoute allowedUserTypes={["STATION_OPERATOR"]}>
+                        <StationOperatorPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/stations"
+                    element={
+                      <ProtectedRoute allowedUserTypes={["STATION_OPERATOR"]}>
+                        <StationsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/stations/:stationId"
+                    element={
+                      <ProtectedRoute allowedUserTypes={["STATION_OPERATOR"]}>
+                        <StationDetails />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                {/* Dashboard - accessible by all authenticated users */}
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-              </Route>
-            </Routes>
+                  {/* Dashboard - accessible by all authenticated users */}
+                  <Route
+                    path="/"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Route>
+              </Routes>
+            </StationOperatorProvider>
           </ChargersProvider>
         </StationsProvider>
       </AuthProvider>
