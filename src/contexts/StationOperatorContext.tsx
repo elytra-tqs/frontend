@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 
 interface Station {
@@ -19,13 +19,17 @@ interface StationOperatorContextType {
 
 const StationOperatorContext = createContext<StationOperatorContextType | undefined>(undefined);
 
-export function StationOperatorProvider({ children }: { children: React.ReactNode }) {
+interface StationOperatorProviderProps {
+  readonly children: React.ReactNode;
+}
+
+export function StationOperatorProvider({ children }: StationOperatorProviderProps) {
   const [availableStations, setAvailableStations] = useState<Station[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { token } = useAuth();
 
-  const fetchAvailableStations = async () => {
+  const fetchAvailableStations = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -46,9 +50,9 @@ export function StationOperatorProvider({ children }: { children: React.ReactNod
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [token]);
 
-  const claimStation = async (stationId: number) => {
+  const claimStation = useCallback(async (stationId: number) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -70,9 +74,9 @@ export function StationOperatorProvider({ children }: { children: React.ReactNod
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [token, fetchAvailableStations]);
 
-  const releaseStation = async () => {
+  const releaseStation = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -94,7 +98,7 @@ export function StationOperatorProvider({ children }: { children: React.ReactNod
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [token, fetchAvailableStations]);
 
   return (
     <StationOperatorContext.Provider

@@ -1,7 +1,6 @@
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import StationsPage from './pages/manage_stations/StationsPage';
 import StationDetails from './pages/manage_stations/StationDetails';
-import Dashboard from './pages/Dashboard';
 import EVDriverPage from './pages/evdriver/EVDriverPage';
 import StationOperatorPage from './pages/station_operator/StationOperatorPage';
 import AdminPage from './pages/admin/AdminPage';
@@ -14,8 +13,6 @@ import SignUp from "./pages/SignUp";
 import { AddCarPage } from "./pages/evdriver/AddCarPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { StationOperatorProvider } from './contexts/StationOperatorContext';
-
-type UserType = 'EV_DRIVER' | 'STATION_OPERATOR' | 'ADMIN';
 
 function App() {
   return (
