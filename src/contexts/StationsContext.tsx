@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
+import { useAuth } from "./AuthContext";
 
 const api = axios.create({
   timeout: 5000,
@@ -7,6 +8,16 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
   baseURL: "http://localhost/api/v1",
+});
+
+// Add request interceptor to include auth token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export interface Station {
