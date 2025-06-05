@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import axios from 'axios';
 
 // API client configuration
@@ -14,7 +14,7 @@ const carsApiClient = axios.create({
 // Add auth token to requests if available
 carsApiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) {
+  if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -72,14 +72,17 @@ export const CarsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const fetchCarsByDriver = useCallback(async (driverId: string) => {
+    console.log('CarsContext fetchCarsByDriver - driverId:', driverId);
     setLoading(true);
     setError(null);
     try {
       const response = await carsApiClient.get<Car[]>(`/cars/driver/${driverId}`);
+      console.log('CarsContext - Cars fetched:', response.data);
       setCars(response.data);
-    } catch (err) {
+    } catch (err: any) {
       setError(err instanceof Error ? err.message : 'Failed to fetch driver cars');
       console.error('Error fetching driver cars:', err);
+      console.error('Error response:', err.response?.data);
     } finally {
       setLoading(false);
     }
@@ -98,37 +101,24 @@ export const CarsProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // First, get the current user info to find the driver ID
         try {
           const token = localStorage.getItem('token');
-          console.log('Token exists:', !!token);
           
           if (token) {
-            const meResponse = await carsApiClient.get('/auth/me');
-            console.log('User data from /auth/me:', meResponse.data);
+            const meResponse = await carsApiClient.get<{ userId: number; username: string; email: string }>('/auth/me');
             
             if (meResponse.data && meResponse.data.userId) {
-
-              const oldEndpoint = `/drivers/user/${meResponse.data.userId}`;
-              const response = await carsApiClient.get(oldEndpoint);
-
-              console.log(response.data.id)
-
-              // Assuming the user ID is the same as driver ID for EV_DRIVER users
-              endpoint = `/cars/driver/${response.data.id}`;
-              console.log('Using endpoint:', endpoint);
+              const driverResponse = await carsApiClient.get<{ id: number }>(`/drivers/user/${meResponse.data.userId}`);
+              
+              // Use the driver ID for the endpoint
+              endpoint = `/cars/driver/${driverResponse.data.id}`;
             }
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Could not fetch user info:', error);
-          console.error('Error details:', error.response?.data);
         }
       }
       
-      console.log('Final endpoint:', endpoint);
-      console.log('Car data being sent:', carData);
-
-
       const response = await carsApiClient.post<Car>(endpoint, carData);
       const newCar = response.data;
-      console.log('New car created:', newCar);
       setCars((prevCars) => [...prevCars, newCar]);
       return newCar;
     } catch (err: any) {

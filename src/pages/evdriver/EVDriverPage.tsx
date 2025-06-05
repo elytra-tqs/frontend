@@ -96,9 +96,8 @@ function EVDriverPage() {
   const allChargerTypes = ["Type1", "Type2", "Type3"]; // Replace with actual charger types
   const sliderRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const { cars, loading: carsLoading, fetchCarsByDriver } = useCars();
-  const { user } = useAuth();
-  const [driverId, setDriverId] = useState<string | null>(null);
+  const { cars, loading: carsLoading, fetchCarsByDriver, error: carsError } = useCars();
+  const { user, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
@@ -107,7 +106,15 @@ function EVDriverPage() {
   // Fetch driver ID and cars when user is available
   useEffect(() => {
     const fetchDriverData = async () => {
-      if (user?.id) {
+      console.log('EVDriverPage useEffect - authLoading:', authLoading, 'user:', user);
+      
+      // Don't fetch if auth is still loading
+      if (authLoading) {
+        console.log('Auth is still loading, skipping fetch');
+        return;
+      }
+      
+      if (user?.userId) {
         try {
           const apiClient = axios.create({
             baseURL: 'http://localhost/api/v1',
@@ -116,20 +123,27 @@ function EVDriverPage() {
             },
           });
           
-          const response = await apiClient.get(`/drivers/user/${user.id}`);
+          console.log('Fetching driver data for user ID:', user.userId);
+          const response = await apiClient.get<{
+              id: number; userId: number
+          }>(`/drivers/user/${user.userId}`);
+          console.log('Driver response:', response.data);
+          
           if (response.data?.id) {
-            setDriverId(response.data.id.toString());
             // Fetch cars for this driver using the new endpoint
+            console.log('Fetching cars for driver ID:', response.data.id);
             await fetchCarsByDriver(response.data.id.toString());
           }
         } catch (error) {
           console.error('Error fetching driver data:', error);
         }
+      } else {
+        console.log('No user ID available');
       }
     };
 
     fetchDriverData();
-  }, [user, fetchCarsByDriver]);
+  }, [authLoading, user, fetchCarsByDriver]);
 
   // Update slider progress CSS variable
   useEffect(() => {
@@ -141,6 +155,14 @@ function EVDriverPage() {
       }
     }
   }, [maxDistance]);
+
+  useEffect(() => {
+    console.log("Auth loading:", authLoading);
+    console.log("User ID:", user?.id);
+    console.log("Cars:", cars);
+    console.log("Cars loading:", carsLoading);
+    console.log("Cars error:", carsError);
+  }, [authLoading, user, cars, carsLoading, carsError]);
 
   function successCallback(position: GeolocationPosition) {
     setUserLocation([position.coords.latitude, position.coords.longitude]);
@@ -300,6 +322,10 @@ function EVDriverPage() {
             {carsLoading ? (
               <DropdownMenuItem disabled>
                 <span className="text-sm text-gray-500">Loading cars...</span>
+              </DropdownMenuItem>
+            ) : carsError ? (
+              <DropdownMenuItem disabled>
+                <span className="text-sm text-red-500">Error loading cars: {carsError}</span>
               </DropdownMenuItem>
             ) : cars.length === 0 ? (
               <DropdownMenuItem disabled>
