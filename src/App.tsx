@@ -1,7 +1,6 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import StationsPage from './pages/manage_stations/StationsPage';
 import StationDetails from './pages/manage_stations/StationDetails';
-import Dashboard from './pages/Dashboard';
 import EVDriverPage from './pages/evdriver/EVDriverPage';
 import StationOperatorPage from './pages/station_operator/StationOperatorPage';
 import AdminPage from './pages/admin/AdminPage';
@@ -14,6 +13,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import { AddCarPage } from "./pages/evdriver/AddCarPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { StationOperatorProvider } from './contexts/StationOperatorContext';
 
 function App() {
   return (
@@ -21,12 +21,13 @@ function App() {
       <AuthProvider>
         <CarsProvider>
           <StationsProvider>
-            <ChargersProvider>
+          <ChargersProvider>
+            <StationOperatorProvider>
               <Routes>
                 {/* Public routes */}
                 <Route path="/signin" element={<SignIn />} />
                 <Route path="/signup" element={<SignUp />} />
-
+                
                 {/* Protected routes with layout */}
                 <Route element={<AppLayout />}>
                   {/* EV Driver routes */}
@@ -98,18 +99,28 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-
-                  {/* Dashboard - accessible by all authenticated users */}
                   <Route
                     path="/"
                     element={
                       <ProtectedRoute>
-                        <Dashboard />
+                        {({ userType }) => {
+                          switch (userType) {
+                            case "ADMIN":
+                              return <Navigate to="/admin" replace />;
+                            case "EV_DRIVER":
+                              return <Navigate to="/evdriver" replace />;
+                            case "STATION_OPERATOR":
+                              return <Navigate to="/operator" replace />;
+                            default:
+                              return <Navigate to="/signin" replace />;
+                          }
+                        }}
                       </ProtectedRoute>
                     }
                   />
                 </Route>
               </Routes>
+              </StationOperatorProvider>
             </ChargersProvider>
           </StationsProvider>
         </CarsProvider>

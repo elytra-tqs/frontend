@@ -31,12 +31,14 @@ interface StationsListProps {
   stations: Station[];
   onAddStation: () => void;
   isLoading?: boolean;
+  canAddStation?: boolean;
 }
 
 const StationsList: FC<StationsListProps> = ({
   stations,
   onAddStation,
   isLoading = false,
+  canAddStation = false,
 }) => {
   const navigate = useNavigate();
   const { updateStation, deleteStation } = useStations();
@@ -70,25 +72,28 @@ const StationsList: FC<StationsListProps> = ({
   }
 
   return (
-    <div className="container mx-auto  ">
+    <div className="container mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Charging Stations</h1>
-        <Button
-          onClick={onAddStation}
-          className="flex items-center gap-2"
-          disabled={isLoading}
-        >
-          <Plus className="w-5 h-5" />
-          Add Station
-        </Button>
+        {canAddStation && (
+          <Button
+            onClick={onAddStation}
+            className="flex items-center gap-2"
+            disabled={isLoading}
+          >
+            <Plus className="w-5 h-5" />
+            Add Station
+          </Button>
+        )}
       </div>
-
       {stations.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">
             No charging stations found
           </p>
-          <Button onClick={onAddStation}>Register Your First Station</Button>
+          {canAddStation && (
+            <Button onClick={onAddStation}>Register Your First Station</Button>
+          )}
         </div>
       ) : (
         <div className="grid gap-4">
@@ -119,7 +124,7 @@ const StationsList: FC<StationsListProps> = ({
                     </Button>
                     <Button
                       variant="ghost"
-                      onClick={() => navigate(`/stations/${station.id}`)}
+                      onClick={() => navigate(`/admin/stations/${station.id}`)}
                       disabled={isLoading}
                     >
                       View Details

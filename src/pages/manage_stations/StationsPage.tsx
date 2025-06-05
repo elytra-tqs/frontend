@@ -6,6 +6,7 @@ import { useState, type FC } from "react";
 import { useStations } from "../../contexts/StationsContext";
 import type { StationFormData } from "../../contexts/StationsContext";
 import { AlertCircle } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface StationListItem {
   id: string;
@@ -21,6 +22,7 @@ interface StationListItem {
 }
 
 const StationsPage: FC = () => {
+  const { user } = useAuth();
   const [showNewStationForm, setShowNewStationForm] = useState(false);
   const [selectedStationId, setSelectedStationId] = useState<string | null>(
     null
@@ -93,6 +95,7 @@ const StationsPage: FC = () => {
             stations={stationsWithStringIds}
             onAddStation={() => setShowNewStationForm(true)}
             isLoading={loading}
+            canAddStation={user?.userType === "ADMIN"}
           />
         )}
       </div>
