@@ -2,15 +2,7 @@ import * as z from "zod";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { AuthForm } from "../components/auth/AuthForm";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../components/ui/form";
-import { Input } from "../components/ui/input";
+
 
 const formSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
