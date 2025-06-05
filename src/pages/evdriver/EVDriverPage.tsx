@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
-import L from "leaflet";
 import { ChevronDown, MapPin, Navigation, Car, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +18,8 @@ import {
 import { useCars } from "../../contexts/CarsContext";
 import { useAuth } from "../../contexts/AuthContext";
 import axios from "axios";
+import { userIcon, stationIcon } from "@/lib/mapIcons";
+import { getCurrentPosition, handleGeolocationError, getDistance } from "@/lib/geolocation";
 
 const mapStyles = `
   .leaflet-top.leaflet-left .leaflet-control-zoom {
@@ -47,28 +48,6 @@ interface Station {
   chargers?: Charger[];
 }
 
-const userIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-  shadowSize: [41, 41],
-  iconSize: [25, 41],
-});
-
-const stationIcon = L.icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  iconRetinaUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-  shadowSize: [41, 41],
-  iconSize: [25, 41],
-});
 
 function MapController({ center, zoom }: { center: [number, number], zoom: number }) {
   const map = useMap();
@@ -100,7 +79,14 @@ function EVDriverPage() {
   const { user, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
+    getCurrentPosition({
+      onSuccess: (position) => {
+        setUserLocation([position.coords.latitude, position.coords.longitude]);
+      },
+      onError: (error) => {
+        alert(handleGeolocationError(error));
+      }
+    });
   }, []);
 
   // Fetch driver ID and cars when user is available
@@ -164,40 +150,6 @@ function EVDriverPage() {
     console.log("Cars error:", carsError);
   }, [authLoading, user, cars, carsLoading, carsError]);
 
-  function successCallback(position: GeolocationPosition) {
-    setUserLocation([position.coords.latitude, position.coords.longitude]);
-  }
-
-  function errorCallback(error: GeolocationPositionError) {
-    switch (error.code) {
-      case error.PERMISSION_DENIED:
-        alert("User denied the request for Geolocation.");
-        break;
-      case error.POSITION_UNAVAILABLE:
-        alert("Location information is unavailable.");
-        break;
-      case error.TIMEOUT:
-        alert("The request to get user location timed out.");
-        break;
-      default:
-        alert("An unknown error occurred.");
-        break;
-    }
-  }
-
-  function getDistance(
-    [lat1, lon1]: [number, number],
-    [lat2, lon2]: [number, number]
-  ) {
-    const toRad = (v: number) => (v * Math.PI) / 180;
-    const R = 6371; // km
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  }
 
   const sortedStations = userLocation
     ? [...stations].sort(
