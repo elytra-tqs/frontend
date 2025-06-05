@@ -1,25 +1,52 @@
-import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useStationOperator } from '@/contexts/StationOperatorContext';
 import { AlertCircle } from 'lucide-react';
 
-export function StationLinker() {
-  const {
-    availableStations,
-    fetchAvailableStations,
-    claimStation,
-    releaseStation,
-    isLoading,
-    error
-  } = useStationOperator();
+interface Station {
+  id: number;
+  name: string;
+  address: string;
+  status?: string;
+}
 
-  useEffect(() => {
-    // Only fetch if we don't have any stations yet
-    if (availableStations.length === 0) {
-      fetchAvailableStations();
+interface StationLinkerProps {
+  stations: Station[];
+  onClaimStation: (stationId: number) => Promise<void>;
+  isLoading?: boolean;
+  error?: string | null;
+}
+
+export function StationLinker({ stations, onClaimStation, isLoading = false, error }: StationLinkerProps) {
+  const renderStations = () => {
+    if (isLoading) {
+      return <div className="text-center py-4">Loading available stations...</div>;
     }
-  }, []); // Empty dependency array since we only want to fetch once on mount
+    if (stations.length === 0) {
+      return <div className="text-center py-4 text-gray-500">No available stations found.</div>;
+    }
+    return (
+      <div className="space-y-4">
+        {stations.map((station) => (
+          <Card key={station.id} className="hover:shadow-lg transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="font-semibold">{station.name}</h3>
+                  <p className="text-sm text-gray-500">{station.address}</p>
+                </div>
+                <Button
+                  onClick={() => onClaimStation(station.id)}
+                  disabled={isLoading}
+                >
+                  Claim Station
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <Card>
@@ -33,35 +60,7 @@ export function StationLinker() {
             <span>{error}</span>
           </div>
         )}
-
-        {isLoading ? (
-          <div className="text-center py-4">Loading available stations...</div>
-        ) : availableStations.length > 0 ? (
-          <div className="space-y-4">
-            {availableStations.map((station) => (
-              <Card key={station.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-semibold">{station.name}</h3>
-                      <p className="text-sm text-gray-500">{station.address}</p>
-                    </div>
-                    <Button
-                      onClick={() => claimStation(station.id)}
-                      disabled={isLoading}
-                    >
-                      Claim Station
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-4 text-gray-500">
-            No available stations found.
-          </div>
-        )}
+        {renderStations()}
       </CardContent>
     </Card>
   );

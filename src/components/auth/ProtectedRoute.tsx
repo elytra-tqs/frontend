@@ -4,8 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 type UserType = 'EV_DRIVER' | 'STATION_OPERATOR' | 'ADMIN';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode | ((props: { userType: UserType | null }) => React.ReactNode);
-  allowedUserTypes?: UserType[];
+  readonly children: React.ReactNode | ((props: { userType: UserType | null }) => React.ReactNode);
+  readonly allowedUserTypes?: UserType[];
 }
 
 export default function ProtectedRoute({ children, allowedUserTypes }: ProtectedRouteProps) {
