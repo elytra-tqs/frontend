@@ -147,21 +147,15 @@ export default function SignUp() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="EV_DRIVER">
-                          <div className="flex flex-col">
-                            <span className="font-medium">EV Driver</span>
-                            <span className="text-sm text-gray-500">Access charging stations and manage your bookings</span>
+                          <div className="flex flex-row w-full">
+                            <span className="font-medium">EV Driver </span>
+                            <span className="text-sm text-gray-500 pl-2"> Access charging stations and manage your bookings</span>
                           </div>
                         </SelectItem>
                         <SelectItem value="STATION_OPERATOR">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Station Operator</span>
-                            <span className="text-sm text-gray-500">Manage your charging stations and monitor operations</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="ADMIN">
-                          <div className="flex flex-col">
-                            <span className="font-medium">Admin</span>
-                            <span className="text-sm text-gray-500">Full system access and management capabilities</span>
+                          <div className="flex flex-row w-full">
+                            <span className="font-medium">Station Operator </span>
+                            <span className="text-sm text-gray-500 pl-2"> Manage your charging stations </span>
                           </div>
                         </SelectItem>
                       </SelectContent>
