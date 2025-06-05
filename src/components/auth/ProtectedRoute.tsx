@@ -1,9 +1,11 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
+type UserType = 'EV_DRIVER' | 'STATION_OPERATOR' | 'ADMIN';
+
 interface ProtectedRouteProps {
-  children: React.ReactNode;
-  allowedUserTypes?: string[];
+  children: React.ReactNode | ((props: { userType: UserType | null }) => React.ReactNode);
+  allowedUserTypes?: UserType[];
 }
 
 export default function ProtectedRoute({ children, allowedUserTypes }: ProtectedRouteProps) {
@@ -15,11 +17,14 @@ export default function ProtectedRoute({ children, allowedUserTypes }: Protected
 
   // If no specific user types are required, allow access
   if (!allowedUserTypes) {
+    if (typeof children === 'function') {
+      return <>{children({ userType: user?.userType as UserType })}</>;
+    }
     return <>{children}</>;
   }
 
   // Check if user's type is allowed
-  if (!user || !allowedUserTypes.includes(user.userType)) {
+  if (!user || !allowedUserTypes.includes(user.userType as UserType)) {
     // Redirect to appropriate dashboard based on user type
     switch (user?.userType) {
       case 'EV_DRIVER':
@@ -33,5 +38,8 @@ export default function ProtectedRoute({ children, allowedUserTypes }: Protected
     }
   }
 
+  if (typeof children === 'function') {
+    return <>{children({ userType: user.userType as UserType })}</>;
+  }
   return <>{children}</>;
 } 
