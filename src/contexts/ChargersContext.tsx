@@ -68,7 +68,6 @@ export const ChargersProvider = ({ children }: { children: ReactNode }) => {
   const [chargers, setChargers] = useState<Charger[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const { token } = useAuth();
 
   const getChargerAvailability = async (
     chargerId: number
