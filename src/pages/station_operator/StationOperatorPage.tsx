@@ -1,26 +1,34 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, AlertCircle, Clock, Link as LinkIcon } from "lucide-react";
+import { PlusIcon, AlertCircle, Clock, Link as LinkIcon, Calendar } from "lucide-react";
 import { useChargers, ChargerStatus } from "../../contexts/ChargersContext";
 import { useStationOperator } from "../../contexts/StationOperatorContext";
 import NewChargerForm from "../../components/stations/NewChargerForm";
 import { TimeSlotManager, type TimeSlot } from "../../components/stations/TimeSlotManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StationLinker } from "../../components/stations/StationLinker";
+import { BookingsList } from "../../components/BookingsList";
 
 function StationOperatorPage() {
-  const { availableStations, claimStation, releaseStation, fetchAvailableStations } = useStationOperator();
+  const { availableStations, claimedStation, claimStation, releaseStation, fetchAvailableStations, fetchClaimedStation } = useStationOperator();
   const { addChargerToStation, updateChargerAvailability, chargers, fetchChargersByStation } = useChargers();
   const [showNewChargerForm, setShowNewChargerForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
-  const [myStation, setMyStation] = useState<typeof availableStations[0] | null>(null);
 
   useEffect(() => {
-    // Fetch available stations only on initial mount
+    // Fetch available stations and claimed station on initial mount
     fetchAvailableStations();
-  }, [fetchAvailableStations]);
+    fetchClaimedStation();
+  }, [fetchAvailableStations, fetchClaimedStation]);
+
+  useEffect(() => {
+    // Fetch chargers when claimed station changes
+    if (claimedStation?.id) {
+      fetchChargersByStation(claimedStation.id);
+    }
+  }, [claimedStation, fetchChargersByStation]);
 
   // Initialize default time slots when chargers are loaded
   useEffect(() => {
@@ -68,6 +76,10 @@ function StationOperatorPage() {
     try {
       await addChargerToStation(stationId, chargerData);
       setShowNewChargerForm(false);
+      // Refresh chargers after adding a new one
+      if (claimedStation?.id) {
+        fetchChargersByStation(claimedStation.id);
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to add charger. Please try again.");
@@ -87,7 +99,6 @@ function StationOperatorPage() {
   const handleReleaseStation = async () => {
     try {
       await releaseStation();
-      setMyStation(null);
     } catch (err) {
       console.error(err);
       setError("Failed to release station. Please try again.");
@@ -97,12 +108,6 @@ function StationOperatorPage() {
   const handleClaimStation = async (stationId: number) => {
     try {
       await claimStation(stationId);
-      const claimedStation = availableStations.find(s => s.id === stationId);
-      if (claimedStation) {
-        setMyStation(claimedStation);
-        // Fetch chargers for the claimed station
-        fetchChargersByStation(stationId);
-      }
     } catch (err) {
       console.error(err);
       setError("Failed to claim station. Please try again.");
@@ -118,7 +123,7 @@ function StationOperatorPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>My Station</CardTitle>
-            {myStation && (
+            {claimedStation && (
               <Button variant="outline" onClick={handleReleaseStation}>
                 <LinkIcon className="h-4 w-4 mr-2" />
                 Release Station
@@ -126,18 +131,18 @@ function StationOperatorPage() {
             )}
           </CardHeader>
           <CardContent>
-            {myStation ? (
+            {claimedStation ? (
               <div className="space-y-4">
                 <p className="text-sm">
-                  <span className="font-medium">Name:</span> {myStation.name}
+                  <span className="font-medium">Name:</span> {claimedStation.name}
                 </p>
                 <p className="text-sm">
-                  <span className="font-medium">Location:</span> {myStation.address}
+                  <span className="font-medium">Location:</span> {claimedStation.address}
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Status:</span>{" "}
                   <span className="inline-block px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                    {myStation.status ?? "available"}
+                    {claimedStation.status ?? "available"}
                   </span>
                 </p>
               </div>
@@ -153,15 +158,19 @@ function StationOperatorPage() {
           </CardContent>
         </Card>
 
-        {myStation && (
+        {claimedStation && (
           <>
             {/* Main Content Tabs */}
             <Tabs defaultValue="chargers" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="chargers">Chargers</TabsTrigger>
                 <TabsTrigger value="time-slots">
                   <Clock className="h-4 w-4 mr-2" />
                   Time Slots
+                </TabsTrigger>
+                <TabsTrigger value="bookings">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Bookings
                 </TabsTrigger>
               </TabsList>
 
@@ -192,7 +201,7 @@ function StationOperatorPage() {
                         </CardHeader>
                         <CardContent>
                           <NewChargerForm
-                            stationId={myStation.id}
+                            stationId={claimedStation.id}
                             onSubmit={handleAddCharger}
                             onCancel={() => setShowNewChargerForm(false)}
                           />
@@ -276,6 +285,33 @@ function StationOperatorPage() {
                       onRemoveSlot={handleRemoveTimeSlot}
                       onToggleAvailability={handleToggleTimeSlotAvailability}
                     />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Bookings Tab */}
+              <TabsContent value="bookings">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Station Bookings</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {chargers.length > 0 ? (
+                        chargers.map((charger) => (
+                          <div key={charger.id}>
+                            <h3 className="text-lg font-semibold mb-3">
+                              Charger {charger.id} - {charger.type} ({charger.power} kW)
+                            </h3>
+                            <BookingsList chargerId={charger.id} compact />
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          No chargers available to show bookings.
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>

@@ -8,22 +8,26 @@ import AppLayout from './components/layout/AppLayout';
 import { StationsProvider } from "./contexts/StationsContext";
 import { ChargersProvider } from "./contexts/ChargersContext";
 import { CarsProvider } from "./contexts/CarsContext";
+import { BookingsProvider } from "./contexts/BookingsContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import { AddCarPage } from "./pages/evdriver/AddCarPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { StationOperatorProvider } from './contexts/StationOperatorContext';
+import { Toaster } from "sonner";
 
 function App() {
   return (
     <BrowserRouter>
+      <Toaster richColors position="top-right" />
       <AuthProvider>
         <CarsProvider>
           <StationsProvider>
           <ChargersProvider>
-            <StationOperatorProvider>
-              <Routes>
+            <BookingsProvider>
+              <StationOperatorProvider>
+                <Routes>
                 {/* Public routes */}
                 <Route path="/signin" element={<SignIn />} />
                 <Route path="/signup" element={<SignUp />} />
@@ -121,6 +125,7 @@ function App() {
                 </Route>
               </Routes>
               </StationOperatorProvider>
+            </BookingsProvider>
             </ChargersProvider>
           </StationsProvider>
         </CarsProvider>

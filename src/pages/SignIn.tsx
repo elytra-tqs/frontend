@@ -1,6 +1,6 @@
 import * as z from "zod";
 import { useAuth } from "../contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { AuthForm } from "../components/auth/AuthForm";
 
 const formSchema = z.object({
@@ -11,7 +11,33 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function SignIn() {
-  const { login } = useAuth();
+  const { login, isAuthenticated, user, isLoading } = useAuth();
+
+  // If still loading, show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If already authenticated, redirect to appropriate page
+  if (isAuthenticated && user) {
+    switch (user.userType) {
+      case "ADMIN":
+        return <Navigate to="/admin" replace />;
+      case "EV_DRIVER":
+        return <Navigate to="/evdriver" replace />;
+      case "STATION_OPERATOR":
+        return <Navigate to="/operator" replace />;
+      default:
+        return <Navigate to="/" replace />;
+    }
+  }
 
   async function onSubmit(values: FormValues) {
     await login(values.username, values.password);
