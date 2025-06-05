@@ -21,12 +21,12 @@ import {
 } from "../ui/select";
 
 interface AuthFormProps {
-  onSubmit: (values: any) => Promise<void>;
-  formSchema: z.ZodType<any>;
-  defaultValues: any;
-  submitButtonText: string;
-  loadingButtonText: string;
-  isSignUp?: boolean;
+  readonly onSubmit: (values: any) => Promise<void>;
+  readonly formSchema: z.ZodType<any>;
+  readonly defaultValues: any;
+  readonly submitButtonText: string;
+  readonly loadingButtonText: string;
+  readonly isSignUp?: boolean;
 }
 
 export function AuthForm({
@@ -51,7 +51,7 @@ export function AuthForm({
       setIsLoading(true);
       await onSubmit(values);
     } catch (err) {
-      setError(isSignUp ? "Registration failed. Please try again." : "Invalid credentials");
+      setError(err instanceof Error ? err.message : (isSignUp ? "Registration failed. Please try again." : "Invalid credentials"));
     } finally {
       setIsLoading(false);
     }

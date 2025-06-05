@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,18 +15,18 @@ export interface TimeSlot {
 
 interface TimeSlotManagerProps {
   readonly chargers: readonly Charger[];
-  readonly slots: readonly TimeSlot[];
+  readonly timeSlots: readonly TimeSlot[];
   readonly onAddSlot?: (slot: Omit<TimeSlot, "id">) => void;
   readonly onRemoveSlot: (slotId: string) => void;
   readonly onToggleAvailability: (slotId: string) => void;
 }
 
-export function TimeSlotManager({ chargers, slots, onRemoveSlot, onToggleAvailability }: Readonly<TimeSlotManagerProps>) {
+export function TimeSlotManager({ chargers, timeSlots, onRemoveSlot, onToggleAvailability }: Readonly<TimeSlotManagerProps>) {
   return (
     <div className="space-y-6">
       <Accordion type="single" collapsible className="w-full">
         {chargers.map((charger) => {
-          const chargerSlots = slots.filter(slot => slot.chargerId === charger.id);
+          const chargerSlots = timeSlots.filter(slot => slot.chargerId === charger.id);
           return (
             <AccordionItem key={charger.id} value={charger.id.toString()}>
               <AccordionTrigger className="px-4">

@@ -10,6 +10,15 @@ const api = axios.create({
   baseURL: "http://localhost/api/v1",
 });
 
+// Add request interceptor to include auth token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export enum ChargerStatus {
   AVAILABLE = "AVAILABLE",
   BEING_USED = "BEING_USED",
@@ -80,10 +89,7 @@ export const ChargersProvider = ({ children }: { children: ReactNode }) => {
     try {
       await api.put(
         `/chargers/${chargerId}/availability`,
-        JSON.stringify(status),
-        {
-          headers: { "Content-Type": "application/json" },
-        }
+        JSON.stringify(status)
       );
 
       // Update local state

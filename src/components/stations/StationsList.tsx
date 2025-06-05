@@ -119,7 +119,7 @@ const StationsList: FC<StationsListProps> = ({
                     </Button>
                     <Button
                       variant="ghost"
-                      onClick={() => navigate(`/stations/${station.id}`)}
+                      onClick={() => navigate(`/admin/stations/${station.id}`)}
                       disabled={isLoading}
                     >
                       View Details

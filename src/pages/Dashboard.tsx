@@ -53,9 +53,9 @@ export default function Dashboard() {
         <p className="text-gray-600 mb-8">{content.description}</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {content.actions.map((action, index) => (
+          {content.actions.map((action) => (
             <Button
-              key={index}
+              key={action.path}
               variant="outline"
               className="h-24 text-lg"
               onClick={() => navigate(action.path)}
