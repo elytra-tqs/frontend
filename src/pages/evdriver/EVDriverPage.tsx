@@ -1,13 +1,25 @@
 import { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
-import L from "leaflet";
-import { ChevronDown, MapPin, Navigation } from "lucide-react";
+import { ChevronDown, MapPin, Navigation, Car, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useStations } from "../../contexts/StationsContext";
 import { ChargerStatus } from "../../contexts/ChargersContext";
 import { StationPopup } from "@/components/StationPopup";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { useCars } from "../../contexts/CarsContext";
+import { useAuth } from "../../contexts/AuthContext";
+import axios from "axios";
+import { userIcon, stationIcon } from "@/lib/mapIcons";
+import { getCurrentPosition, handleGeolocationError, getDistance } from "@/lib/geolocation";
 
 const mapStyles = `
   .leaflet-top.leaflet-left .leaflet-control-zoom {
@@ -36,28 +48,6 @@ interface Station {
   chargers?: Charger[];
 }
 
-const userIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-  shadowSize: [41, 41],
-  iconSize: [25, 41],
-});
-
-const stationIcon = L.icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  iconRetinaUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-  shadowSize: [41, 41],
-  iconSize: [25, 41],
-});
 
 function MapController({ center, zoom }: { center: [number, number], zoom: number }) {
   const map = useMap();
@@ -84,10 +74,62 @@ function EVDriverPage() {
   const [chargerTypeFilter, setChargerTypeFilter] = useState<string>("all");
   const allChargerTypes = ["Type1", "Type2", "Type3"]; // Replace with actual charger types
   const sliderRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+  const { cars, loading: carsLoading, fetchCarsByDriver, error: carsError } = useCars();
+  const { user, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
+    getCurrentPosition({
+      onSuccess: (position) => {
+        setUserLocation([position.coords.latitude, position.coords.longitude]);
+      },
+      onError: (error) => {
+        alert(handleGeolocationError(error));
+      }
+    });
   }, []);
+
+  // Fetch driver ID and cars when user is available
+  useEffect(() => {
+    const fetchDriverData = async () => {
+      console.log('EVDriverPage useEffect - authLoading:', authLoading, 'user:', user);
+      
+      // Don't fetch if auth is still loading
+      if (authLoading) {
+        console.log('Auth is still loading, skipping fetch');
+        return;
+      }
+      
+      if (user?.userId) {
+        try {
+          const apiClient = axios.create({
+            baseURL: 'http://localhost/api/v1',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+          });
+          
+          console.log('Fetching driver data for user ID:', user.userId);
+          const response = await apiClient.get<{
+              id: number; userId: number
+          }>(`/drivers/user/${user.userId}`);
+          console.log('Driver response:', response.data);
+          
+          if (response.data?.id) {
+            // Fetch cars for this driver using the new endpoint
+            console.log('Fetching cars for driver ID:', response.data.id);
+            await fetchCarsByDriver(response.data.id.toString());
+          }
+        } catch (error) {
+          console.error('Error fetching driver data:', error);
+        }
+      } else {
+        console.log('No user ID available');
+      }
+    };
+
+    fetchDriverData();
+  }, [authLoading, user, fetchCarsByDriver]);
 
   // Update slider progress CSS variable
   useEffect(() => {
@@ -100,40 +142,14 @@ function EVDriverPage() {
     }
   }, [maxDistance]);
 
-  function successCallback(position: GeolocationPosition) {
-    setUserLocation([position.coords.latitude, position.coords.longitude]);
-  }
+  useEffect(() => {
+    console.log("Auth loading:", authLoading);
+    console.log("User ID:", user?.id);
+    console.log("Cars:", cars);
+    console.log("Cars loading:", carsLoading);
+    console.log("Cars error:", carsError);
+  }, [authLoading, user, cars, carsLoading, carsError]);
 
-  function errorCallback(error: GeolocationPositionError) {
-    switch (error.code) {
-      case error.PERMISSION_DENIED:
-        alert("User denied the request for Geolocation.");
-        break;
-      case error.POSITION_UNAVAILABLE:
-        alert("Location information is unavailable.");
-        break;
-      case error.TIMEOUT:
-        alert("The request to get user location timed out.");
-        break;
-      default:
-        alert("An unknown error occurred.");
-        break;
-    }
-  }
-
-  function getDistance(
-    [lat1, lon1]: [number, number],
-    [lat2, lon2]: [number, number]
-  ) {
-    const toRad = (v: number) => (v * Math.PI) / 180;
-    const R = 6371; // km
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  }
 
   const sortedStations = userLocation
     ? [...stations].sort(
@@ -234,6 +250,64 @@ function EVDriverPage() {
       )}
 
       <div className="absolute top-4 right-4 z-[1001] flex gap-2 pointer-events-auto">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
+              title="Manage cars"
+            >
+              <Car className="w-4 h-4" />
+              <span>Manage Cars</span>
+              <ChevronDown className="w-4 h-4 ml-1" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuItem 
+              onClick={() => navigate("/evdriver/add-car")}
+              className="cursor-pointer"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              <span>Add New Car</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {carsLoading ? (
+              <DropdownMenuItem disabled>
+                <span className="text-sm text-gray-500">Loading cars...</span>
+              </DropdownMenuItem>
+            ) : carsError ? (
+              <DropdownMenuItem disabled>
+                <span className="text-sm text-red-500">Error loading cars: {carsError}</span>
+              </DropdownMenuItem>
+            ) : cars.length === 0 ? (
+              <DropdownMenuItem disabled>
+                <span className="text-sm text-gray-500">You have no cars yet</span>
+              </DropdownMenuItem>
+            ) : (
+              <>
+                <div className="px-2 py-1.5 text-sm font-semibold text-gray-700">
+                  Your Cars
+                </div>
+                {cars.map((car) => (
+                  <DropdownMenuItem 
+                    key={car.id}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      // You can add navigation to car details or management page here
+                      console.log('Selected car:', car);
+                    }}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">{car.model}</span>
+                      <span className="text-xs text-gray-500">{car.licensePlate}</span>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <Button
           onClick={centerOnUser}
           variant="outline"

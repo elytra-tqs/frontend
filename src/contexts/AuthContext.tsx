@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface User {
+  userId: number;
   id: number;
   username: string;
   email: string;
@@ -17,6 +18,7 @@ interface AuthContextType {
   register: (userData: RegisterData) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 interface RegisterData {
@@ -33,16 +35,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check if we have a token and fetch user data
     if (token) {
       fetchUserData();
+    } else {
+      setIsLoading(false);
     }
   }, [token]);
 
   const fetchUserData = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch('http://localhost/api/v1/auth/me', {
         headers: {
@@ -59,6 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error fetching user data:', error);
       logout();
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -194,6 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         isAuthenticated: !!token,
+        isLoading,
       }}
     >
       {children}

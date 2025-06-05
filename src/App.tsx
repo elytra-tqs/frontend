@@ -7,6 +7,7 @@ import AdminPage from './pages/admin/AdminPage';
 import AppLayout from './components/layout/AppLayout';
 import { StationsProvider } from "./contexts/StationsContext";
 import { ChargersProvider } from "./contexts/ChargersContext";
+import { CarsProvider } from "./contexts/CarsContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
@@ -18,7 +19,8 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <StationsProvider>
+        <CarsProvider>
+          <StationsProvider>
           <ChargersProvider>
             <StationOperatorProvider>
               <Routes>
@@ -97,8 +99,6 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-
-                  {/* Root route - redirects based on user type */}
                   <Route
                     path="/"
                     element={
@@ -120,9 +120,10 @@ function App() {
                   />
                 </Route>
               </Routes>
-            </StationOperatorProvider>
-          </ChargersProvider>
-        </StationsProvider>
+              </StationOperatorProvider>
+            </ChargersProvider>
+          </StationsProvider>
+        </CarsProvider>
       </AuthProvider>
     </BrowserRouter>
   );
