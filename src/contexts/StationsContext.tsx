@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "./AuthContext";
 
 const api = axios.create({
   timeout: 5000,
