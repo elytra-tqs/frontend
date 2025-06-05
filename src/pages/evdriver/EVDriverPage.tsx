@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
 import L from "leaflet";
-import { ChevronDown, MapPin, Navigation } from "lucide-react";
+import { ChevronDown, MapPin, Navigation, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useStations } from "../../contexts/StationsContext";
 import { ChargerStatus } from "../../contexts/ChargersContext";
 import { StationPopup } from "@/components/StationPopup";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
 
 const mapStyles = `
   .leaflet-top.leaflet-left .leaflet-control-zoom {
@@ -84,6 +85,7 @@ function EVDriverPage() {
   const [chargerTypeFilter, setChargerTypeFilter] = useState<string>("all");
   const allChargerTypes = ["Type1", "Type2", "Type3"]; // Replace with actual charger types
   const sliderRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
@@ -234,6 +236,16 @@ function EVDriverPage() {
       )}
 
       <div className="absolute top-4 right-4 z-[1001] flex gap-2 pointer-events-auto">
+        <Button
+          onClick={() => navigate("/evdriver/add-car")}
+          variant="outline"
+          className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
+          title="Manage cars"
+        >
+          <Car className="w-4 h-4" />
+          <span>Manage Cars</span>
+        </Button>
+
         <Button
           onClick={centerOnUser}
           variant="outline"

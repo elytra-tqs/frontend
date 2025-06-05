@@ -19,6 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card } from "@/components/ui/card"
+import { useCars } from "@/contexts/CarsContext"
+import { useNavigate } from "react-router-dom"
+import { useState } from "react"
 
 const formSchema = z.object({
   model: z.string().min(1, "Model is required"),
@@ -28,6 +31,10 @@ const formSchema = z.object({
 })
 
 export function AddCarPage() {
+  const { addCar, loading, error } = useCars();
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,15 +45,32 @@ export function AddCarPage() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // TODO: Implement car creation logic
-    console.log(values)
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      setIsSubmitting(true);
+      await addCar({
+        ...values,
+        batteryCapacity: parseFloat(values.batteryCapacity)
+      });
+      // Navigate back to EVDriver page after successful submission
+      navigate("/evdriver");
+    } catch (error) {
+      console.error("Failed to add car:", error);
+      // Error is handled by the context and displayed via the error state
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <div className="container mx-auto py-8">
       <Card className="max-w-2xl mx-auto p-6">
         <h1 className="text-2xl font-bold mb-6">Add New Car</h1>
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4">
+            {error}
+          </div>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -119,8 +143,12 @@ export function AddCarPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
-              Add Car
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading || isSubmitting}
+            >
+              {loading || isSubmitting ? "Adding..." : "Add Car"}
             </Button>
           </form>
         </Form>
