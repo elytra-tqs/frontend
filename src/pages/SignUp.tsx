@@ -18,31 +18,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import { useAuth } from "../contexts/AuthContext";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const formSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().email("Invalid email address"),
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  userType: z.enum(["ev_driver", "station_operator", "admin"]),
+  userType: z.enum(["EV_DRIVER", "STATION_OPERATOR", "ADMIN"]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 export default function SignUp() {
+  const { register } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "",
       password: "",
+      email: "",
       firstName: "",
       lastName: "",
-      userType: "ev_driver",
+      userType: "EV_DRIVER",
     },
   });
 
-  function onSubmit(values: FormValues) {
-    console.log(values);
+  async function onSubmit(values: FormValues) {
+    try {
+      setError(null);
+      setIsLoading(true);
+      await register(values);
+    } catch (err) {
+      setError("Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -53,6 +70,11 @@ export default function SignUp() {
             <h1 className="text-3xl font-bold">Create an Account</h1>
             <p className="text-gray-500">Enter your information to sign up</p>
           </div>
+          {error && (
+            <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -63,6 +85,20 @@ export default function SignUp() {
                     <FormLabel>Username</FormLabel>
                     <FormControl>
                       <Input placeholder="johndoe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }: { field: any }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="john@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -110,9 +146,24 @@ export default function SignUp() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="ev_driver">EV Driver</SelectItem>
-                        <SelectItem value="station_operator">Station Operator</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="EV_DRIVER">
+                          <div className="flex flex-col">
+                            <span className="font-medium">EV Driver</span>
+                            <span className="text-sm text-gray-500">Access charging stations and manage your bookings</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="STATION_OPERATOR">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Station Operator</span>
+                            <span className="text-sm text-gray-500">Manage your charging stations and monitor operations</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="ADMIN">
+                          <div className="flex flex-col">
+                            <span className="font-medium">Admin</span>
+                            <span className="text-sm text-gray-500">Full system access and management capabilities</span>
+                          </div>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -132,16 +183,22 @@ export default function SignUp() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Sign Up
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Creating account..." : "Sign Up"}
               </Button>
             </form>
           </Form>
+          <p className="text-center text-sm text-gray-500">
+            Already have an account?{" "}
+            <Link to="/signin" className="text-blue-600 hover:underline">
+              Sign in
+            </Link>
+          </p>
         </div>
       </div>
       <div className="w-1/2 bg-gray-100 flex items-center justify-center">
         <img
-          src="/elytra.png"
+          src="/Electric car-rafiki (1).svg"
           alt="Authentication"
           className="w-full h-full object-contain p-8"
         />
