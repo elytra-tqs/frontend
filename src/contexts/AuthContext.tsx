@@ -94,20 +94,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userData = await userResponse.json();
       setUser(userData);
       
-      // Redirect based on user type
-      switch (userData.userType) {
-        case 'EV_DRIVER':
-          navigate('/evdriver');
-          break;
-        case 'STATION_OPERATOR':
-          navigate('/operator');
-          break;
-        case 'ADMIN':
-          navigate('/admin');
-          break;
-        default:
-          navigate('/');
-      }
+      // Always navigate to root path
+      navigate('/');
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -183,20 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Fetch user data after successful registration
       await fetchUserData();
       
-      // Redirect based on user type
-      switch (data.userType) {
-        case 'EV_DRIVER':
-          navigate('/evdriver');
-          break;
-        case 'STATION_OPERATOR':
-          navigate('/operator');
-          break;
-        case 'ADMIN':
-          navigate('/admin');
-          break;
-        default:
-          navigate('/');
-      }
+      navigate('/');
     } catch (error) {
       console.error('Registration error:', error);
       throw error;
