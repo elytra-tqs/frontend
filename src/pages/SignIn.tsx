@@ -11,6 +11,9 @@ import {
   FormMessage,
 } from "../components/ui/form";
 import { Input } from "../components/ui/input";
+import { useAuth } from "../contexts/AuthContext";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const formSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -20,6 +23,10 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function SignIn() {
+  const { login } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -28,8 +35,16 @@ export default function SignIn() {
     },
   });
 
-  function onSubmit(values: FormValues) {
-    console.log(values);
+  async function onSubmit(values: FormValues) {
+    try {
+      setError(null);
+      setIsLoading(true);
+      await login(values.username, values.password);
+    } catch (err) {
+      setError("Invalid username or password");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -40,6 +55,11 @@ export default function SignIn() {
             <h1 className="text-3xl font-bold">Welcome Back</h1>
             <p className="text-gray-500">Enter your credentials to sign in</p>
           </div>
+          {error && (
+            <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -68,16 +88,22 @@ export default function SignIn() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Sign In
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </Form>
+          <p className="text-center text-sm text-gray-500">
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-blue-600 hover:underline">
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
       <div className="w-1/2 bg-gray-100 flex items-center justify-center">
         <img
-          src="/elytra.png"
+          src="/Electric car-rafiki.svg"
           alt="Authentication"
           className="w-full h-full object-contain p-8"
         />
