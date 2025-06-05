@@ -9,6 +9,16 @@ const api = axios.create({
   baseURL: "http://localhost/api/v1",
 });
 
+// Add request interceptor to include auth token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export interface Station {
   id?: number;
   name: string;

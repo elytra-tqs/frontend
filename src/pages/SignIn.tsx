@@ -1,16 +1,7 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "../components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "../components/ui/form";
-import { Input } from "../components/ui/input";
+import { useAuth } from "../contexts/AuthContext";
+import { Link } from "react-router-dom";
+import { AuthForm } from "../components/auth/AuthForm";
 
 const formSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -20,16 +11,10 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function SignIn() {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-    },
-  });
+  const { login } = useAuth();
 
-  function onSubmit(values: FormValues) {
-    console.log(values);
+  async function onSubmit(values: FormValues) {
+    await login(values.username, values.password);
   }
 
   return (
@@ -40,44 +25,27 @@ export default function SignIn() {
             <h1 className="text-3xl font-bold">Welcome Back</h1>
             <p className="text-gray-500">Enter your credentials to sign in</p>
           </div>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }: { field: any }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="johndoe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }: { field: any }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full">
-                Sign In
-              </Button>
-            </form>
-          </Form>
+          <AuthForm
+            onSubmit={onSubmit}
+            formSchema={formSchema}
+            defaultValues={{
+              username: "",
+              password: "",
+            }}
+            submitButtonText="Sign In"
+            loadingButtonText="Signing in..."
+          />
+          <p className="text-center text-sm text-gray-500">
+            Don't have an account?{" "}
+            <Link to="/signup" className="text-blue-600 hover:underline">
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
       <div className="w-1/2 bg-gray-100 flex items-center justify-center">
         <img
-          src="/elytra.png"
+          src="/Electric car-rafiki.svg"
           alt="Authentication"
           className="w-full h-full object-contain p-8"
         />
