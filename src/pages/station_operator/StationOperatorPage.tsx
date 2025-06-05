@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusIcon, AlertCircle, Clock, Link as LinkIcon } from "lucide-react";
-import { useStations } from "../../contexts/StationsContext";
 import { useChargers, ChargerStatus } from "../../contexts/ChargersContext";
 import { useStationOperator } from "../../contexts/StationOperatorContext";
 import NewChargerForm from "../../components/stations/NewChargerForm";
@@ -11,19 +10,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StationLinker } from "../../components/stations/StationLinker";
 
 function StationOperatorPage() {
-  const { stations } = useStations();
+  const { availableStations, claimStation, releaseStation, fetchAvailableStations } = useStationOperator();
   const { addChargerToStation, updateChargerAvailability, chargers, fetchChargersByStation } = useChargers();
-  const { releaseStation } = useStationOperator();
   const [showNewChargerForm, setShowNewChargerForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [myStation, setMyStation] = useState<typeof availableStations[0] | null>(null);
 
   useEffect(() => {
-    // Fetch chargers for the station when the component mounts
-    if (stations.length > 0 && stations[0].id) {
-      fetchChargersByStation(stations[0].id);
-    }
-  }, [stations, fetchChargersByStation]);
+    // Fetch available stations only on initial mount
+    fetchAvailableStations();
+  }, [fetchAvailableStations]);
 
   // Initialize default time slots when chargers are loaded
   useEffect(() => {
@@ -90,9 +87,25 @@ function StationOperatorPage() {
   const handleReleaseStation = async () => {
     try {
       await releaseStation();
+      setMyStation(null);
     } catch (err) {
       console.error(err);
       setError("Failed to release station. Please try again.");
+    }
+  };
+
+  const handleClaimStation = async (stationId: number) => {
+    try {
+      await claimStation(stationId);
+      const claimedStation = availableStations.find(s => s.id === stationId);
+      if (claimedStation) {
+        setMyStation(claimedStation);
+        // Fetch chargers for the claimed station
+        fetchChargersByStation(stationId);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to claim station. Please try again.");
     }
   };
 
@@ -105,7 +118,7 @@ function StationOperatorPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>My Station</CardTitle>
-            {stations.length > 0 && (
+            {myStation && (
               <Button variant="outline" onClick={handleReleaseStation}>
                 <LinkIcon className="h-4 w-4 mr-2" />
                 Release Station
@@ -113,31 +126,34 @@ function StationOperatorPage() {
             )}
           </CardHeader>
           <CardContent>
-            {stations.length > 0 ? (
+            {myStation ? (
               <div className="space-y-4">
                 <p className="text-sm">
-                  <span className="font-medium">Name:</span> {stations[0].name}
+                  <span className="font-medium">Name:</span> {myStation.name}
                 </p>
                 <p className="text-sm">
-                  <span className="font-medium">Location:</span> {stations[0].address}
+                  <span className="font-medium">Location:</span> {myStation.address}
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Status:</span>{" "}
                   <span className="inline-block px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                    {stations[0].status ?? "available"}
+                    {myStation.status ?? "available"}
                   </span>
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-muted-foreground">No station information available.</p>
-                <StationLinker />
+                <p className="text-muted-foreground">No station claimed yet.</p>
+                <StationLinker 
+                  stations={availableStations}
+                  onClaimStation={handleClaimStation}
+                />
               </div>
             )}
           </CardContent>
         </Card>
 
-        {stations.length > 0 && (
+        {myStation && (
           <>
             {/* Main Content Tabs */}
             <Tabs defaultValue="chargers" className="w-full">
@@ -175,13 +191,11 @@ function StationOperatorPage() {
                           <CardTitle>Add New Charging Station</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          {stations.length > 0 && (
-                            <NewChargerForm
-                              stationId={stations[0].id ?? 0}
-                              onSubmit={handleAddCharger}
-                              onCancel={() => setShowNewChargerForm(false)}
-                            />
-                          )}
+                          <NewChargerForm
+                            stationId={myStation.id}
+                            onSubmit={handleAddCharger}
+                            onCancel={() => setShowNewChargerForm(false)}
+                          />
                         </CardContent>
                       </Card>
                     ) : (
@@ -251,12 +265,19 @@ function StationOperatorPage() {
 
               {/* Time Slots Tab */}
               <TabsContent value="time-slots">
-                <TimeSlotManager
-                  chargers={chargers}
-                  slots={timeSlots}
-                  onRemoveSlot={handleRemoveTimeSlot}
-                  onToggleAvailability={handleToggleTimeSlotAvailability}
-                />
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Time Slots</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <TimeSlotManager
+                      chargers={chargers}
+                      timeSlots={timeSlots}
+                      onRemoveSlot={handleRemoveTimeSlot}
+                      onToggleAvailability={handleToggleTimeSlotAvailability}
+                    />
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           </>
