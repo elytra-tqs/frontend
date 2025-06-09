@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, AlertCircle, Clock, Link as LinkIcon, Calendar } from "lucide-react";
+import { PlusIcon, AlertCircle, Link as LinkIcon, Calendar } from "lucide-react";
 import { useChargers, ChargerStatus } from "../../contexts/ChargersContext";
 import { useStationOperator } from "../../contexts/StationOperatorContext";
 import NewChargerForm from "../../components/stations/NewChargerForm";
-import { TimeSlotManager, type TimeSlot } from "../../components/stations/TimeSlotManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StationLinker } from "../../components/stations/StationLinker";
 import { BookingsList } from "../../components/BookingsList";
@@ -15,7 +14,6 @@ function StationOperatorPage() {
   const { addChargerToStation, updateChargerAvailability, chargers, fetchChargersByStation } = useChargers();
   const [showNewChargerForm, setShowNewChargerForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
 
   useEffect(() => {
     // Fetch available stations and claimed station on initial mount
@@ -30,38 +28,6 @@ function StationOperatorPage() {
     }
   }, [claimedStation, fetchChargersByStation]);
 
-  // Initialize default time slots when chargers are loaded
-  useEffect(() => {
-    if (chargers.length > 0 && timeSlots.length === 0) {
-      const defaultSlots: TimeSlot[] = [];
-      
-      chargers.forEach(charger => {
-        // Morning slots (8:00-12:00)
-        for (let i = 0; i < 5; i++) {
-          defaultSlots.push({
-            id: Math.random().toString(36).slice(2, 11),
-            chargerId: charger.id,
-            startTime: `${8 + i}:00`,
-            endTime: `${9 + i}:00`,
-            isAvailable: true
-          });
-        }
-        
-        // Afternoon slots (13:00-17:00)
-        for (let i = 0; i < 5; i++) {
-          defaultSlots.push({
-            id: Math.random().toString(36).slice(2, 11),
-            chargerId: charger.id,
-            startTime: `${13 + i}:00`,
-            endTime: `${14 + i}:00`,
-            isAvailable: true
-          });
-        }
-      });
-
-      setTimeSlots(defaultSlots);
-    }
-  }, [chargers]);
 
   const handleUpdateStatus = async (stationId: string, newStatus: ChargerStatus) => {
     try {
@@ -86,15 +52,6 @@ function StationOperatorPage() {
     }
   };
 
-  const handleRemoveTimeSlot = (slotId: string) => {
-    setTimeSlots(timeSlots.filter(slot => slot.id !== slotId));
-  };
-
-  const handleToggleTimeSlotAvailability = (slotId: string) => {
-    setTimeSlots(timeSlots.map(slot =>
-      slot.id === slotId ? { ...slot, isAvailable: !slot.isAvailable } : slot
-    ));
-  };
 
   const handleReleaseStation = async () => {
     try {
@@ -162,12 +119,8 @@ function StationOperatorPage() {
           <>
             {/* Main Content Tabs */}
             <Tabs defaultValue="chargers" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="chargers">Chargers</TabsTrigger>
-                <TabsTrigger value="time-slots">
-                  <Clock className="h-4 w-4 mr-2" />
-                  Time Slots
-                </TabsTrigger>
                 <TabsTrigger value="bookings">
                   <Calendar className="h-4 w-4 mr-2" />
                   Bookings
@@ -272,22 +225,6 @@ function StationOperatorPage() {
                 </Card>
               </TabsContent>
 
-              {/* Time Slots Tab */}
-              <TabsContent value="time-slots">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Time Slots</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TimeSlotManager
-                      chargers={chargers}
-                      timeSlots={timeSlots}
-                      onRemoveSlot={handleRemoveTimeSlot}
-                      onToggleAvailability={handleToggleTimeSlotAvailability}
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
 
               {/* Bookings Tab */}
               <TabsContent value="bookings">

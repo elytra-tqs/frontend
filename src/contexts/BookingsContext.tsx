@@ -66,6 +66,13 @@ export interface Booking {
     status: string;
     stationId: number;
   };
+  car?: {
+    id: number;
+    model: string;
+    licensePlate: string;
+    batteryCapacity: number;
+    chargerType: string;
+  };
   status: BookingStatus;
 }
 
@@ -74,6 +81,7 @@ export interface BookingRequest {
   endTime: string;
   userId: number;
   chargerId: number;
+  carId: number;
 }
 
 interface BookingsContextProps {

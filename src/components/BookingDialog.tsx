@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format, addHours, isBefore, isAfter } from "date-fns";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, Clock, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBookings, type BookingRequest } from "@/contexts/BookingsContext";
+import { useCars } from "@/contexts/CarsContext";
 import { toast } from "sonner";
 
 interface BookingDialogProps {
@@ -33,10 +34,42 @@ export function BookingDialog({
 }: BookingDialogProps) {
   const { user } = useAuth();
   const { createBooking, loading } = useBookings();
+  const { cars, fetchCarsByDriver } = useCars();
   
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedStartTime, setSelectedStartTime] = useState<string>("");
   const [selectedDuration, setSelectedDuration] = useState<string>("1");
+  const [selectedCarId, setSelectedCarId] = useState<string>("");
+  const [driverId, setDriverId] = useState<string | null>(null);
+  
+  // Fetch driver ID and cars when dialog opens
+  useEffect(() => {
+    const fetchDriverData = async () => {
+      if (isOpen && user?.userId) {
+        try {
+          // First get driver ID from user ID
+          const response = await fetch(`http://localhost/api/v1/drivers/user/${user.userId}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          if (response.ok) {
+            const driverData = await response.json();
+            setDriverId(driverData.id.toString());
+            // Then fetch cars for this driver
+            await fetchCarsByDriver(driverData.id.toString());
+          }
+        } catch (error) {
+          console.error("Error fetching driver data:", error);
+        }
+      }
+    };
+    
+    fetchDriverData();
+  }, [isOpen, user?.userId, fetchCarsByDriver]);
+  
+  // Filter cars that are compatible with the charger type
+  const compatibleCars = cars.filter(car => car.chargerType === chargerInfo.type);
   
   const generateTimeSlots = () => {
     const slots = [];
@@ -78,6 +111,11 @@ export function BookingDialog({
       return;
     }
     
+    if (!selectedCarId) {
+      toast.error("Please select a car");
+      return;
+    }
+    
     try {
       const [hours, minutes] = selectedStartTime.split(':').map(Number);
       const startTime = new Date(selectedDate);
@@ -106,7 +144,8 @@ export function BookingDialog({
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
         userId: user.userId,
-        chargerId: chargerId
+        chargerId: chargerId,
+        carId: parseInt(selectedCarId)
       };
       
       await createBooking(bookingData);
@@ -188,6 +227,45 @@ export function BookingDialog({
           </div>
           
           <div className="grid gap-2">
+            <Label htmlFor="car">Select Car</Label>
+            <Select value={selectedCarId} onValueChange={setSelectedCarId}>
+              <SelectTrigger id="car">
+                <SelectValue placeholder="Select a car">
+                  {selectedCarId && (
+                    <div className="flex items-center gap-2">
+                      <Car className="h-4 w-4" />
+                      {cars.find(c => c.id === selectedCarId)?.model} - {cars.find(c => c.id === selectedCarId)?.licensePlate}
+                    </div>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {compatibleCars.length === 0 ? (
+                  <div className="p-2 text-sm text-muted-foreground">
+                    No compatible cars found. You need a car with {chargerInfo.type} charger type.
+                  </div>
+                ) : (
+                  compatibleCars.map((car) => (
+                    <SelectItem key={car.id} value={car.id}>
+                      <div className="flex flex-col">
+                        <span>{car.model} - {car.licensePlate}</span>
+                        <span className="text-xs text-muted-foreground">
+                          Battery: {car.batteryCapacity} kWh | Type: {car.chargerType}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            {cars.length > 0 && compatibleCars.length === 0 && (
+              <p className="text-sm text-destructive">
+                None of your cars are compatible with this {chargerInfo.type} charger.
+              </p>
+            )}
+          </div>
+          
+          <div className="grid gap-2">
             <Label htmlFor="duration">Duration</Label>
             <Select value={selectedDuration} onValueChange={setSelectedDuration}>
               <SelectTrigger id="duration">
@@ -221,6 +299,11 @@ export function BookingDialog({
                   )
                 } ({selectedDuration} hour{parseInt(selectedDuration) > 1 ? 's' : ''})
               </p>
+              {selectedCarId && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Car: {cars.find(c => c.id === selectedCarId)?.model} ({cars.find(c => c.id === selectedCarId)?.licensePlate})
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -231,7 +314,7 @@ export function BookingDialog({
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={!selectedStartTime || loading}
+            disabled={!selectedStartTime || !selectedCarId || loading || compatibleCars.length === 0}
           >
             {loading ? "Creating..." : "Confirm Booking"}
           </Button>
