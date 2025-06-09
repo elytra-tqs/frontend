@@ -25,6 +25,7 @@ interface Station {
     longitude: number;
   };
   numberOfChargers: number;
+  operatorUsername?: string;
 }
 
 interface StationsListProps {
@@ -104,6 +105,11 @@ const StationsList: FC<StationsListProps> = ({
                   <div>
                     <CardTitle className="text-xl">{station.name}</CardTitle>
                     <p className="text-muted-foreground">{station.location}</p>
+                    {station.operatorUsername && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Operator: {station.operatorUsername}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-4">
                     <Button

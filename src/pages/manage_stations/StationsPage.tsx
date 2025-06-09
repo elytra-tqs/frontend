@@ -19,6 +19,7 @@ interface StationListItem {
     longitude: number;
   };
   numberOfChargers: number;
+  operatorUsername?: string;
 }
 
 const StationsPage: FC = () => {
@@ -50,6 +51,7 @@ const StationsPage: FC = () => {
     status: station.status,
     lastMaintenance: station.lastMaintenance,
     numberOfChargers: 0, // Default value since it's not in the Station type
+    operatorUsername: station.operatorUsername,
   })) as StationListItem[];
 
   if (loading && stations.length === 0) {
@@ -65,7 +67,7 @@ const StationsPage: FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 pt-24 pl-80">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 flex items-center">
             <AlertCircle className="w-5 h-5 mr-2" />

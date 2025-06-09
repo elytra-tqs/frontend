@@ -72,7 +72,7 @@ function StationOperatorPage() {
   };
 
   return (
-    <div className="container mx-auto p-8">
+    <div className="container mx-auto p-8 pt-24 pl-80">
       <h1 className="text-2xl font-bold mb-8">Operator Dashboard</h1>
 
       <div className="space-y-8">

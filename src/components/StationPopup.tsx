@@ -43,18 +43,32 @@ export function StationPopup({ station }: Readonly<{ station: Station }>) {
     }
   }, [station.id]);
 
-  const getStatusColor = (status: ChargerStatus): string => {
+  const getStatusVariant = (status: ChargerStatus): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
       case ChargerStatus.AVAILABLE:
-        return "bg-green-500";
+        return "default";
       case ChargerStatus.BEING_USED:
-        return "bg-blue-500";
+        return "secondary";
       case ChargerStatus.UNDER_MAINTENANCE:
-        return "bg-yellow-500";
       case ChargerStatus.OUT_OF_SERVICE:
-        return "bg-red-500";
+        return "destructive";
       default:
-        return "bg-gray-500";
+        return "outline";
+    }
+  };
+  
+  const getStatusClass = (status: ChargerStatus): string => {
+    switch (status) {
+      case ChargerStatus.AVAILABLE:
+        return "bg-green-500 text-white hover:bg-green-600";
+      case ChargerStatus.BEING_USED:
+        return "bg-blue-500 text-white hover:bg-blue-600";
+      case ChargerStatus.UNDER_MAINTENANCE:
+        return "bg-yellow-500 text-black hover:bg-yellow-600";
+      case ChargerStatus.OUT_OF_SERVICE:
+        return "bg-red-500 text-white hover:bg-red-600";
+      default:
+        return "bg-gray-500 text-white hover:bg-gray-600";
     }
   };
 
@@ -116,7 +130,7 @@ export function StationPopup({ station }: Readonly<{ station: Station }>) {
                     </div>
                   </div>
                 </div>
-                <Badge variant="outline" className={getStatusColor(charger.status)}>
+                <Badge className={getStatusClass(charger.status)}>
                   {getStatusText(charger.status)}
                 </Badge>
               </div>
