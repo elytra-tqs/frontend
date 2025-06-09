@@ -29,6 +29,7 @@ export interface Station {
   status?: "available" | "maintenance" | "offline";
   lastMaintenance?: string;
   numberOfChargers?: number;
+  operatorUsername?: string;
 }
 
 export interface StationFormData {

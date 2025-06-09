@@ -97,10 +97,30 @@ export function StationOperatorProvider({ children }: StationOperatorProviderPro
   }, [token, user]);
 
   const claimStation = useCallback(async (stationId: number) => {
+    if (!user) {
+      setError('User not authenticated');
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(`http://localhost/api/v1/station-operators/1/claim-station/${stationId}`, {
+      
+      // First, get the station operator's ID
+      const operatorResponse = await fetch(`http://localhost/api/v1/station-operators/user/${user.userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!operatorResponse.ok) {
+        throw new Error('Failed to fetch operator info');
+      }
+
+      const operatorData = await operatorResponse.json();
+      
+      // Then claim the station with the correct operator ID
+      const response = await fetch(`http://localhost/api/v1/station-operators/${operatorData.id}/claim-station/${stationId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -108,7 +128,8 @@ export function StationOperatorProvider({ children }: StationOperatorProviderPro
       });
 
       if (!response.ok) {
-        throw new Error('Failed to claim station');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to claim station');
       }
 
       // Refresh available stations and claimed station after claiming
@@ -116,16 +137,37 @@ export function StationOperatorProvider({ children }: StationOperatorProviderPro
       await fetchClaimedStation();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to claim station');
+      throw err;
     } finally {
       setIsLoading(false);
     }
-  }, [token, fetchAvailableStations, fetchClaimedStation]);
+  }, [token, user, fetchAvailableStations, fetchClaimedStation]);
 
   const releaseStation = useCallback(async () => {
+    if (!user) {
+      setError('User not authenticated');
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch('http://localhost/api/v1/station-operators/1/release-station', {
+      
+      // First, get the station operator's ID
+      const operatorResponse = await fetch(`http://localhost/api/v1/station-operators/user/${user.userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!operatorResponse.ok) {
+        throw new Error('Failed to fetch operator info');
+      }
+
+      const operatorData = await operatorResponse.json();
+      
+      // Then release the station with the correct operator ID
+      const response = await fetch(`http://localhost/api/v1/station-operators/${operatorData.id}/release-station`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -133,7 +175,8 @@ export function StationOperatorProvider({ children }: StationOperatorProviderPro
       });
 
       if (!response.ok) {
-        throw new Error('Failed to release station');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to release station');
       }
 
       // Refresh available stations after releasing
@@ -141,10 +184,11 @@ export function StationOperatorProvider({ children }: StationOperatorProviderPro
       setClaimedStation(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to release station');
+      throw err;
     } finally {
       setIsLoading(false);
     }
-  }, [token, fetchAvailableStations]);
+  }, [token, user, fetchAvailableStations]);
 
   return (
     <StationOperatorContext.Provider

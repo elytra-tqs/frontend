@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
-import { ChevronDown, MapPin, Navigation, Car, Plus, Calendar } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl, Circle } from "react-leaflet";
+import { ChevronDown, MapPin, Navigation, Car, Plus, Calendar, Filter, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useStations } from "../../contexts/StationsContext";
@@ -22,6 +22,8 @@ import { userIcon, stationIcon } from "@/lib/mapIcons";
 import { getCurrentPosition, handleGeolocationError, getDistance } from "@/lib/geolocation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { BookingsList } from "@/components/BookingsList";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 const mapStyles = `
   .leaflet-top.leaflet-left .leaflet-control-zoom {
@@ -67,15 +69,17 @@ function MapController({ center, zoom }: { center: [number, number], zoom: numbe
 function EVDriverPage() {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const [isBookingsDialogOpen, setIsBookingsDialogOpen] = useState(false);
+  const [showDistanceRadius, setShowDistanceRadius] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const { stations: rawStations, loading: stationsLoading, error: stationsError } = useStations();
   const stations = rawStations as Station[];
   const [maxDistance, setMaxDistance] = useState<number>(0); // 0 means no limit
   const [availabilityFilter, setAvailabilityFilter] = useState<string>("all");
   const [chargerTypeFilter, setChargerTypeFilter] = useState<string>("all");
-  const allChargerTypes = ["Type1", "Type2", "Type3"]; // Replace with actual charger types
+  const allChargerTypes = ["Type 1", "Type 2", "CCS", "CHAdeMO", "Tesla"];
   const sliderRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { cars, loading: carsLoading, fetchCarsByDriver, error: carsError } = useCars();
@@ -230,6 +234,18 @@ function EVDriverPage() {
           <Marker position={userLocation} icon={userIcon}>
             <Popup>Your Location</Popup>
           </Marker>
+          {showDistanceRadius && maxDistance > 0 && (
+            <Circle
+              center={userLocation}
+              radius={maxDistance * 1000} // Convert km to meters
+              pathOptions={{
+                fillColor: "blue",
+                fillOpacity: 0.1,
+                color: "blue",
+                weight: 2,
+              }}
+            />
+          )}
           {filteredStations.map((station) => (
             station.latitude && station.longitude && (
               <Marker
@@ -253,84 +269,138 @@ function EVDriverPage() {
       )}
 
       <div className="absolute top-4 right-4 z-[1001] flex gap-2 pointer-events-auto">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
-              title="Manage cars"
-            >
-              <Car className="w-4 h-4" />
-              <span>Manage Cars</span>
-              <ChevronDown className="w-4 h-4 ml-1" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64">
-            <DropdownMenuItem 
-              onClick={() => navigate("/evdriver/add-car")}
-              className="cursor-pointer"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              <span>Add New Car</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {carsLoading ? (
-              <DropdownMenuItem disabled>
-                <span className="text-sm text-gray-500">Loading cars...</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
+                title="Manage cars"
+              >
+                <Car className="w-4 h-4" />
+                <span>Manage Cars</span>
+                <ChevronDown className="w-4 h-4 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuItem 
+                onClick={() => navigate("/evdriver/add-car")}
+                className="cursor-pointer"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                <span>Add New Car</span>
               </DropdownMenuItem>
-            ) : carsError ? (
-              <DropdownMenuItem disabled>
-                <span className="text-sm text-red-500">Error loading cars: {carsError}</span>
-              </DropdownMenuItem>
-            ) : cars.length === 0 ? (
-              <DropdownMenuItem disabled>
-                <span className="text-sm text-gray-500">You have no cars yet</span>
-              </DropdownMenuItem>
-            ) : (
-              <>
-                <div className="px-2 py-1.5 text-sm font-semibold text-gray-700">
-                  Your Cars
+              <DropdownMenuSeparator />
+              {carsLoading ? (
+                <DropdownMenuItem disabled>
+                  <span className="text-sm text-gray-500">Loading cars...</span>
+                </DropdownMenuItem>
+              ) : carsError ? (
+                <DropdownMenuItem disabled>
+                  <span className="text-sm text-red-500">Error loading cars: {carsError}</span>
+                </DropdownMenuItem>
+              ) : cars.length === 0 ? (
+                <DropdownMenuItem disabled>
+                  <span className="text-sm text-gray-500">You have no cars yet</span>
+                </DropdownMenuItem>
+              ) : (
+                <>
+                  <div className="px-2 py-1.5 text-sm font-semibold text-gray-700">
+                    Your Cars
+                  </div>
+                  {cars.map((car) => (
+                    <DropdownMenuItem 
+                      key={car.id}
+                      className="cursor-pointer"
+                      onClick={() => {
+                        // You can add navigation to car details or management page here
+                        console.log('Selected car:', car);
+                      }}
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">{car.model}</span>
+                        <span className="text-xs text-gray-500">{car.licensePlate}</span>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Button
+            onClick={centerOnUser}
+            variant="outline"
+            className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
+            title="Center on my location"
+          >
+            <MapPin className="w-4 h-4" />
+            <span>My Location</span>
+          </Button>
+
+          <Button
+            onClick={() => setIsBookingsDialogOpen(true)}
+            variant="outline"
+            className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
+            title="View my bookings"
+          >
+            <Calendar className="w-4 h-4" />
+            <span>My Bookings</span>
+          </Button>
+
+        {/* Filters Dropdown */}
+        <div className="relative">
+          <Button
+            onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+            variant="outline"
+            className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
+          >
+            <Filter className="w-4 h-4" />
+            <span>Filters</span>
+            <ChevronDown 
+              className={`w-4 h-4 transition-transform duration-200 ${
+                isFiltersOpen ? 'rotate-180' : ''
+              }`} 
+            />
+          </Button>
+
+          {isFiltersOpen && (
+            <Card className="absolute top-full right-0 mt-2 w-80 bg-white/95 backdrop-blur-sm border shadow-2xl z-[1002]">
+              <CardContent className="p-4 space-y-4">
+                <div>
+                  <label htmlFor="availability-filter" className="block text-sm font-semibold mb-2">Availability</label>
+                  <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+                    <SelectTrigger id="availability-filter" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="AVAILABLE">Available</SelectItem>
+                      <SelectItem value="BEING_USED">In Use</SelectItem>
+                      <SelectItem value="UNDER_MAINTENANCE">Under Maintenance</SelectItem>
+                      <SelectItem value="OUT_OF_SERVICE">Out of Service</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                {cars.map((car) => (
-                  <DropdownMenuItem 
-                    key={car.id}
-                    className="cursor-pointer"
-                    onClick={() => {
-                      // You can add navigation to car details or management page here
-                      console.log('Selected car:', car);
-                    }}
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium">{car.model}</span>
-                      <span className="text-xs text-gray-500">{car.licensePlate}</span>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <div>
+                  <label htmlFor="charger-type-filter" className="block text-sm font-semibold mb-2">Charger Type</label>
+                  <Select value={chargerTypeFilter} onValueChange={setChargerTypeFilter}>
+                    <SelectTrigger id="charger-type-filter" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      {allChargerTypes.map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
-        <Button
-          onClick={centerOnUser}
-          variant="outline"
-          className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
-          title="Center on my location"
-        >
-          <MapPin className="w-4 h-4" />
-          <span>My Location</span>
-        </Button>
-
-        <Button
-          onClick={() => setIsBookingsDialogOpen(true)}
-          variant="outline"
-          className="bg-white/95 backdrop-blur-sm hover:bg-white h-10"
-          title="View my bookings"
-        >
-          <Calendar className="w-4 h-4" />
-          <span>My Bookings</span>
-        </Button>
-
+        {/* Nearby Stations Dropdown */}
         <div className="relative">
           <Button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -348,109 +418,95 @@ function EVDriverPage() {
 
           {isDropdownOpen && (
             <Card className="absolute top-full right-0 mt-2 w-80 max-h-[32rem] overflow-y-auto bg-white/95 backdrop-blur-sm border shadow-2xl z-[1002]">
-              <CardContent className="p-3 -mt-5 -mb-5">
-                <div className="space-y-2 mb-4">
-                  <div>
-                    <label htmlFor="availability-filter" className="block text-xs font-semibold mb-1">Availability</label>
-                    <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
-                      <SelectTrigger id="availability-filter" className="w-full" aria-labelledby="availability-filter">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All</SelectItem>
-                        <SelectItem value="AVAILABLE">Available</SelectItem>
-                        <SelectItem value="BEING_USED">In Use</SelectItem>
-                        <SelectItem value="UNDER_MAINTENANCE">Under Maintenance</SelectItem>
-                        <SelectItem value="OUT_OF_SERVICE">Out of Service</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label htmlFor="charger-type-filter" className="block text-xs font-semibold mb-1">Charger Type</label>
-                    <Select value={chargerTypeFilter} onValueChange={setChargerTypeFilter}>
-                      <SelectTrigger id="charger-type-filter" className="w-full" aria-labelledby="charger-type-filter">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All</SelectItem>
-                        {allChargerTypes.map((type) => (
-                          <SelectItem key={type} value={type}>{type}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label htmlFor="max-distance-slider" className="block text-xs font-semibold mb-2">Max Distance (km)</label>
-                    <div className="slider-container relative mb-2">
+              <CardContent className="p-4 space-y-4">
+                <div>
+                  <label htmlFor="max-distance-slider" className="block text-sm font-semibold mb-2">Max Distance (km)</label>
+                  <div className="space-y-2">
                     <input
                       ref={sliderRef}
                       id="max-distance-slider"
                       type="range"
                       min={0}
-                      max={500}
-                      step={1}
+                      max={100}
+                      step={5}
                       value={maxDistance}
                       onChange={e => setMaxDistance(Number(e.target.value))}
-                      className="custom-slider w-full relative z-10"
-                      aria-describedby="max-distance-help"
+                      className="w-full"
                       style={{
-                        background: `linear-gradient(to right, black 0%, black ${(maxDistance/500)*100}%, white ${(maxDistance/500)*100}%, white 100%)`,
-                        border: '1px solid black',
-                        borderRadius: '4px',
-                        height: '6px'
+                        background: `linear-gradient(to right, rgb(59 130 246) 0%, rgb(59 130 246) ${(maxDistance/100)*100}%, rgb(226 232 240) ${(maxDistance/100)*100}%, rgb(226 232 240) 100%)`
                       }}
                     />
-                    </div>
                     <div className="flex justify-between items-center text-xs text-gray-500">
                       <span>0 km</span>
                       <span className="font-medium text-gray-700">{maxDistance === 0 ? "No limit" : `${maxDistance} km`}</span>
-                      <span>500 km</span>
-                    </div>
-                    <div id="max-distance-help" className="sr-only">
-                      Enter maximum distance in kilometers. Set to 0 for unlimited range.
+                      <span>100 km</span>
                     </div>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  {filteredStations.length === 0 ? (
-                    <div className="text-center text-gray-500 py-8">No results found.</div>
-                  ) : (
-                    filteredStations.map((station) => (
-                      <button
-                        key={station.id}
-                        className="w-full text-left flex flex-col p-3 bg-white/80 rounded-lg border border-gray-200 hover:bg-white/90 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        onClick={() => {
-                          setSelectedStation(station);
-                          setIsDropdownOpen(false);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
+                
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="show-radius"
+                    checked={showDistanceRadius}
+                    onCheckedChange={setShowDistanceRadius}
+                  />
+                  <Label htmlFor="show-radius" className="text-sm font-medium cursor-pointer">
+                    {showDistanceRadius ? (
+                      <span className="flex items-center gap-2">
+                        <Eye className="w-4 h-4" />
+                        Show distance radius
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <EyeOff className="w-4 h-4" />
+                        Hide distance radius
+                      </span>
+                    )}
+                  </Label>
+                </div>
+
+                <div className="border-t pt-4">
+                  <div className="space-y-2">
+                    {filteredStations.length === 0 ? (
+                      <div className="text-center text-gray-500 py-8">No stations found.</div>
+                    ) : (
+                      filteredStations.map((station) => (
+                        <button
+                          key={station.id}
+                          className="w-full text-left flex flex-col p-3 bg-white/80 rounded-lg border border-gray-200 hover:bg-white/90 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          onClick={() => {
                             setSelectedStation(station);
                             setIsDropdownOpen(false);
-                          }
-                        }}
-                        aria-label={`Select ${station.name} station at ${station.address}`}
-                      >
-                        <div className="font-medium text-gray-800 group-hover:text-blue-600 transition-colors">
-                          {station.name}
-                        </div>
-                        <div className="text-sm text-gray-600 mt-1">
-                          {station.address}
-                        </div>
-                        {userLocation && station.latitude && station.longitude && (
-                          <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                            <Navigation className="w-3 h-3" />
-                            {getDistance(userLocation, [
-                              station.latitude,
-                              station.longitude,
-                            ]).toFixed(2)}{" "}
-                            km away
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setSelectedStation(station);
+                              setIsDropdownOpen(false);
+                            }
+                          }}
+                          aria-label={`Select ${station.name} station at ${station.address}`}
+                        >
+                          <div className="font-medium text-gray-800 group-hover:text-blue-600 transition-colors">
+                            {station.name}
                           </div>
-                        )}
-                      </button>
-                    ))
-                  )}
+                          <div className="text-sm text-gray-600 mt-1">
+                            {station.address}
+                          </div>
+                          {userLocation && station.latitude && station.longitude && (
+                            <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                              <Navigation className="w-3 h-3" />
+                              {getDistance(userLocation, [
+                                station.latitude,
+                                station.longitude,
+                              ]).toFixed(2)}{" "}
+                              km away
+                            </div>
+                          )}
+                        </button>
+                      ))
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -458,12 +514,15 @@ function EVDriverPage() {
         </div>
       </div>
 
-      {isDropdownOpen && (
+      {(isDropdownOpen || isFiltersOpen) && (
         <button
           type="button"
-          aria-label="Close stations list"
+          aria-label="Close dropdown"
           className="fixed inset-0 z-[1000] w-full h-full bg-transparent border-0 p-0 cursor-default focus:outline-none"
-          onClick={() => setIsDropdownOpen(false)}
+          onClick={() => {
+            setIsDropdownOpen(false);
+            setIsFiltersOpen(false);
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
               setIsDropdownOpen(false);

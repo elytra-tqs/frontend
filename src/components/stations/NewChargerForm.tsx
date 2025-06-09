@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, type ChangeEvent, type FC, type FormEvent } from 'react';
 import { ChargerStatus } from "@/contexts/ChargersContext";
+import { CHARGER_TYPES } from "@/lib/chargerTypes";
 
 export interface ChargerFormData {
   type: string;
@@ -19,7 +20,7 @@ interface NewChargerFormProps {
 
 const NewChargerForm: FC<NewChargerFormProps> = ({ stationId, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState<ChargerFormData>({
-    type: 'Type2',
+    type: 'Type 2',
     power: 22,
     status: ChargerStatus.AVAILABLE
   });
@@ -56,13 +57,21 @@ const NewChargerForm: FC<NewChargerFormProps> = ({ stationId, onSubmit, onCancel
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="type">Charger Type</Label>
-        <Input
-          id="type"
-          name="type"
+        <Select
           value={formData.type}
-          onChange={handleInputChange}
-          required
-        />
+          onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select charger type" />
+          </SelectTrigger>
+          <SelectContent>
+            {CHARGER_TYPES.map((type) => (
+              <SelectItem key={type.value} value={type.value}>
+                {type.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">

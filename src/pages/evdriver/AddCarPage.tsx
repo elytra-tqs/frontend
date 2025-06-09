@@ -22,6 +22,7 @@ import { Card } from "@/components/ui/card"
 import { useCars } from "@/contexts/CarsContext"
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { CHARGER_TYPES } from "@/lib/chargerTypes"
 
 const formSchema = z.object({
   model: z.string().min(1, "Model is required"),
@@ -132,11 +133,11 @@ export function AddCarPage() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="type1">Type 1 (J1772)</SelectItem>
-                      <SelectItem value="type2">Type 2 (Mennekes)</SelectItem>
-                      <SelectItem value="ccs">CCS</SelectItem>
-                      <SelectItem value="chademo">CHAdeMO</SelectItem>
-                      <SelectItem value="tesla">Tesla</SelectItem>
+                      {CHARGER_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

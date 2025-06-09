@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { format, isPast, isFuture } from "date-fns";
-import { Calendar, Clock, MapPin, Zap, MoreHorizontal, X, CheckCircle } from "lucide-react";
+import { Calendar, Clock, MapPin, Zap, MoreHorizontal, X, CheckCircle, Car } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -235,6 +235,15 @@ export function BookingsList({
                     </div>
                   )}
                 </>
+              )}
+              
+              {booking.car && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Car className="h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {booking.car.model} • {booking.car.licensePlate} • {booking.car.chargerType}
+                  </span>
+                </div>
               )}
             </div>
           </CardContent>
