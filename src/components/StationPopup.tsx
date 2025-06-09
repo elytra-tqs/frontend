@@ -43,19 +43,6 @@ export function StationPopup({ station }: Readonly<{ station: Station }>) {
     }
   }, [station.id]);
 
-  const getStatusVariant = (status: ChargerStatus): "default" | "secondary" | "destructive" | "outline" => {
-    switch (status) {
-      case ChargerStatus.AVAILABLE:
-        return "default";
-      case ChargerStatus.BEING_USED:
-        return "secondary";
-      case ChargerStatus.UNDER_MAINTENANCE:
-      case ChargerStatus.OUT_OF_SERVICE:
-        return "destructive";
-      default:
-        return "outline";
-    }
-  };
   
   const getStatusClass = (status: ChargerStatus): string => {
     switch (status) {

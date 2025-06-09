@@ -40,7 +40,6 @@ export function BookingDialog({
   const [selectedStartTime, setSelectedStartTime] = useState<string>("");
   const [selectedDuration, setSelectedDuration] = useState<string>("1");
   const [selectedCarId, setSelectedCarId] = useState<string>("");
-  const [driverId, setDriverId] = useState<string | null>(null);
   
   // Fetch driver ID and cars when dialog opens
   useEffect(() => {
@@ -55,8 +54,7 @@ export function BookingDialog({
           });
           if (response.ok) {
             const driverData = await response.json();
-            setDriverId(driverData.id.toString());
-            // Then fetch cars for this driver
+            // Fetch cars for this driver
             await fetchCarsByDriver(driverData.id.toString());
           }
         } catch (error) {
