@@ -17,8 +17,24 @@ jobs:
       run: npm ci
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
+    
+    # Start your services
+    - name: Start services
+      run: docker compose up -d
+    
+    # Wait for services to be ready
+    - name: Wait for services
+      run: |
+        timeout 60 bash -c 'until curl -f http://localhost:3000/health || curl -f http://localhost:3000; do sleep 2; done'
+    
     - name: Run Playwright tests
       run: npx playwright test
+    
+    # Stop services
+    - name: Stop services
+      run: docker compose down
+      if: always()
+    
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
